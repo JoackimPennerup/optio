@@ -35,6 +35,7 @@ const AGENT_LABELS: Record<AgentType, string> = {
   codex: "OpenAI Codex",
   copilot: "GitHub Copilot",
   opencode: "OpenCode",
+  kilo: "Kilo CLI",
   gemini: "Google Gemini",
   openclaw: "OpenClaw",
   cursor: "Cursor",

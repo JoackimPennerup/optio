@@ -181,6 +181,17 @@ const SPECS: Record<string, CredentialSpec[]> = {
       addable: true,
     },
   ],
+  kilo: [
+    {
+      secretName: "KILO_API_KEY",
+      method: "api-key",
+      label: "Kilo API key",
+      input: "token",
+      verifiable: false,
+      addable: true,
+      hint: "From your Kilo account's API keys.",
+    },
+  ],
   openclaw: [
     {
       secretName: "OPENCLAW_API_KEY",

@@ -36,8 +36,8 @@ type SetupFile = NonNullable<AgentContainerConfig["setupFiles"]>[number];
 /** Whether a run writes its own `opencode.json` even without MCP servers. */
 export function writesOpencodeRunConfig(
   agentType: string | null | undefined,
-): agentType is "opencode" {
-  return agentType === "opencode" && opencodeHeadlessEnabled();
+): agentType is "opencode" | "kilo" {
+  return (agentType === "opencode" || agentType === "kilo") && opencodeHeadlessEnabled();
 }
 
 /** Where a pod run's OpenCode reads its global rules. */
@@ -50,8 +50,9 @@ export function withOpencodeRules(
   agentType: string | null | undefined,
   setupFiles: SetupFile[],
 ): void {
-  if (agentType !== "opencode" || !opencodeHeadlessEnabled()) return;
-  const path = opencodeRulesPath();
+  if ((agentType !== "opencode" && agentType !== "kilo") || !opencodeHeadlessEnabled()) return;
+  const path =
+    agentType === "kilo" ? `${AGENT_HOME_DIR}/.config/kilo/AGENTS.md` : opencodeRulesPath();
   if (setupFiles.some((f) => f.path === path || f.path === OPENCODE_GLOBAL_AGENTS_MD_PATH)) return;
   setupFiles.push({ path, content: OPENCODE_GLOBAL_AGENTS_MD });
 }

@@ -104,7 +104,8 @@ function agentCli(
   // Claude Code and Codex resume one-shot (`claude -p --resume`, `codex exec
   // resume`); every other CLI resumes into its interactive prompt.
   const headless =
-    opts.mode === "headless" && (!resume || agent === "claude-code" || agent === "codex");
+    opts.mode === "headless" &&
+    (!resume || agent === "claude-code" || agent === "codex" || agent === "kilo");
   const model = opts.model?.trim() ? shellQuote(opts.model.trim()) : null;
   // Effort names are short words ("xhigh"); anything else is dropped rather
   // than handed to a CLI flag or a Codex config override.
@@ -167,6 +168,12 @@ function agentCli(
       const m = model ? ` --model ${model}` : "";
       if (headless) return `opencode run${m}` + (p ? ` ${p}` : "");
       return `opencode${m}` + (p ? ` --prompt ${p}` : "");
+    }
+    case "kilo": {
+      const m = model ? ` --model ${model}` : "";
+      const s = resume ? ` --session ${resume}` : "";
+      if (headless) return `kilo run --auto${m}${s}` + (p ? ` ${p}` : "");
+      return `kilo${m}${s}` + (p ? ` --prompt ${p}` : "");
     }
   }
 }

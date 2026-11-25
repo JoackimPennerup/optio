@@ -7,7 +7,7 @@ the effective configuration at `GET /api/features`.
 
 | Environment variable         | Values                                                                                                                                                         |
 | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `OPTIO_RUNTIMES`             | `claude-code`, `codex`, `copilot`, `cursor`, `gemini`, `openclaw`, `opencode`, `pi`                                                                            |
+| `OPTIO_RUNTIMES`             | `claude-code`, `codex`, `copilot`, `cursor`, `gemini`, `kilo`, `openclaw`, `opencode`, `pi`                                                                    |
 | `OPTIO_GIT_PLATFORMS`        | `codecommit`, `github`, `gitlab`                                                                                                                               |
 | `OPTIO_TRIGGERS`             | `alertmanager`, `datadog`, `github`, `gitlab`, `jenkins`, `jira`, `linear`, `manual`, `pagerduty`, `pylon`, `schedule`, `sentry`, `slack`, `ticket`, `webhook` |
 | `OPTIO_TICKET_SOURCES`       | `github`, `gitlab`, `jira`, `linear`, `notion`                                                                                                                 |

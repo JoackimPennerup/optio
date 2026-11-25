@@ -2536,7 +2536,7 @@ export const api = {
     /** Saved prompt (Prompts library) rendered as the agent prompt instead of commandTemplate. */
     promptTemplateId?: string | null;
     /** Run the rendered template as this agent's prompt; null = raw shell command. */
-    agent?: "claude-code" | "codex" | "cursor" | "gemini" | "opencode" | null;
+    agent?: "claude-code" | "codex" | "cursor" | "gemini" | "opencode" | "kilo" | null;
     spawnMode?: "auto" | "hold";
     /** Agent spawns: stay open for chat (default) or exit when the turn is done. */
     sessionMode?: "interactive" | "headless";
@@ -2563,7 +2563,7 @@ export const api = {
       /** Saved prompt (Prompts library) rendered as the agent prompt instead of commandTemplate. */
       promptTemplateId: string | null;
       /** Run the rendered template as this agent's prompt; null = raw shell command. */
-      agent: "claude-code" | "codex" | "cursor" | "gemini" | "opencode" | null;
+      agent: "claude-code" | "codex" | "cursor" | "gemini" | "opencode" | "kilo" | null;
       spawnMode: "auto" | "hold";
       sessionMode: "interactive" | "headless";
       agentOptions: Record<string, string | boolean> | null;

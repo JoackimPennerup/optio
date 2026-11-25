@@ -36,7 +36,17 @@ export const TaskActivitySubstateSchema = z
   .describe("Activity sub-state for running tasks");
 
 export const AgentTypeSchema = z
-  .enum(["claude-code", "codex", "copilot", "opencode", "gemini", "openclaw", "cursor", "pi"])
+  .enum([
+    "claude-code",
+    "codex",
+    "copilot",
+    "opencode",
+    "kilo",
+    "gemini",
+    "openclaw",
+    "cursor",
+    "pi",
+  ])
   .describe("Agent runtime that executes the task")
   // A runtime the deployment leaves out is refused (OPTIO_RUNTIMES, config/features.ts).
   .superRefine(refineFeature("runtimes"));

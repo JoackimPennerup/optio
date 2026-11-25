@@ -7,7 +7,7 @@ docker build -f images/base.Dockerfile --build-arg AGENT_CLIS=claude-code,openco
 ```
 
 `AGENT_CLIS=all` includes every runtime. A comma list can select `claude-code`,
-`codex`, `pi`, `copilot`, `cursor`, `gemini`, `openclaw`, and `opencode` on the
+`codex`, `pi`, `copilot`, `cursor`, `gemini`, `kilo`, `openclaw`, and `opencode` on the
 base image. The compatibility image supports Claude Code and Codex. The API image contains
 no agent harnesses; agent-selection arguments cannot restore execution in the API pod.
 GitHub, GitLab, AWS and other system utilities are unchanged.

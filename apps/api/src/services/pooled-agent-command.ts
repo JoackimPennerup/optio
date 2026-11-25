@@ -6,6 +6,7 @@ import {
   copilotMcpConfigFlag,
   EXPORT_GEMINI_HOME,
   EXPORT_OPENCODE_CONFIG,
+  EXPORT_KILO_CONFIG,
 } from "../utils/harness-config.js";
 
 /** The first stdin line for Claude Code's stream-json input: the prompt as a user message. */
@@ -105,6 +106,15 @@ export function buildPooledAgentCommand(
         // With the headless rules on, approve what no rule denies, so a
         // headless ask never aborts (#585).
         `opencode run --format json${autoApprove}${modelFlag}${agentFlag} "$OPTIO_PROMPT" </dev/null`,
+      ];
+    }
+    case "kilo": {
+      const modelFlag = env.OPTIO_OPENCODE_MODEL ? ` --model ${q(env.OPTIO_OPENCODE_MODEL)}` : "";
+      const agentFlag = env.OPTIO_OPENCODE_AGENT ? ` --agent ${q(env.OPTIO_OPENCODE_AGENT)}` : "";
+      return [
+        `echo "[optio] Running ${label} (Kilo CLI)..."`,
+        ...EXPORT_KILO_CONFIG,
+        `kilo run --format json --auto${modelFlag}${agentFlag} "$OPTIO_PROMPT" </dev/null`,
       ];
     }
     case "gemini": {

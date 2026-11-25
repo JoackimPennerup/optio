@@ -14,6 +14,7 @@ const providerParamsSchema = z.object({
     "gemini",
     "copilot",
     "opencode",
+    "kilo",
     "openclaw",
     "cursor",
     "pi",

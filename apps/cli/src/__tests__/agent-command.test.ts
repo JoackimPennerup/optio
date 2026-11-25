@@ -44,6 +44,7 @@ describe("buildAgentCommand", () => {
     expect(buildAgentCommand("cursor", "p", SETTINGS)).toBe(`cursor-agent 'p'`);
     expect(buildAgentCommand("gemini", "p", SETTINGS)).toBe(`gemini -i 'p'`);
     expect(buildAgentCommand("opencode", "p", SETTINGS)).toBe(`opencode --prompt 'p'`);
+    expect(buildAgentCommand("kilo", "p", SETTINGS)).toBe(`kilo --prompt 'p'`);
   });
 
   it("omits the prompt flag entirely when no prompt is given", () => {
@@ -51,6 +52,9 @@ describe("buildAgentCommand", () => {
     expect(buildAgentCommand("cursor", undefined, SETTINGS)).toBe("cursor-agent");
     expect(buildAgentCommand("gemini", undefined, SETTINGS)).toBe("gemini");
     expect(buildAgentCommand("opencode", undefined, SETTINGS)).toBe("opencode");
+    expect(buildAgentCommand("kilo", "p", SETTINGS, { mode: "headless" })).toBe(
+      "kilo run --auto 'p'",
+    );
   });
 });
 

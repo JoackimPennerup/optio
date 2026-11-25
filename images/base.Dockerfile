@@ -142,6 +142,11 @@ RUN case ",${AGENT_CLIS}," in *,all,*|*,opencode,*) if [ "$OPENCODE_INSTALL_METH
   && rm -rf /root/.opencode) \
   || echo "WARN: opencode install failed; opencode agent will not be available in this image"; fi ;; esac
 
+# Kilo CLI uses its own config directory and `kilo run --auto` for pod work.
+ARG KILO_CLI_VERSION=7.8.32
+RUN case ",${AGENT_CLIS}," in *,all,*|*,kilo,*) npm install -g "@kilocode/cli@${KILO_CLI_VERSION}" \
+    && kilo --version ;; esac
+
 # Google Gemini CLI
 RUN case ",${AGENT_CLIS}," in *,all,*|*,gemini,*) npm install -g --allow-scripts=@github/keytar,node-pty @google/gemini-cli ;; esac
 

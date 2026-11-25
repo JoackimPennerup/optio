@@ -18,7 +18,15 @@
  */
 
 export type AgentProviderId =
-  "anthropic" | "openai" | "gemini" | "copilot" | "opencode" | "openclaw" | "cursor" | "pi";
+  | "anthropic"
+  | "openai"
+  | "gemini"
+  | "copilot"
+  | "opencode"
+  | "kilo"
+  | "openclaw"
+  | "cursor"
+  | "pi";
 
 export interface ModelOption {
   /** The canonical model id passed to the provider (e.g. "claude-opus-4-7"). */
