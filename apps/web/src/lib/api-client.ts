@@ -745,6 +745,30 @@ export const api = {
       body: JSON.stringify({ token, host }),
     }),
 
+  validateBitbucketToken: (token: string, host: string) =>
+    request<{ valid: boolean; error?: string }>("/api/setup/validate/bitbucket-token", {
+      method: "POST",
+      body: JSON.stringify({ token, host }),
+    }),
+
+  listBitbucketRepos: (token: string, host: string) =>
+    request<{
+      repos: Array<{
+        fullName: string;
+        cloneUrl: string;
+        htmlUrl: string;
+        defaultBranch: string;
+        isPrivate: boolean;
+        description: string | null;
+        language: string | null;
+        pushedAt: string;
+      }>;
+      error?: string;
+    }>("/api/setup/repos/bitbucket", {
+      method: "POST",
+      body: JSON.stringify({ token, host }),
+    }),
+
   validateAwsCredentials: (creds: {
     accessKeyId: string;
     secretAccessKey: string;

@@ -337,10 +337,11 @@ const MIGRATED_ROUTES: MigratedRoute[] = [
   { method: "get", path: "/api/analytics/costs" },
 
   // Phase 7 — setup, secrets, optio, cluster (28 routes)
-  // setup.ts (12)
+  // setup.ts (14)
   { method: "get", path: "/api/setup/status" },
   { method: "post", path: "/api/setup/validate/github-token" },
   { method: "post", path: "/api/setup/validate/gitlab-token" },
+  { method: "post", path: "/api/setup/validate/bitbucket-token" },
   { method: "post", path: "/api/setup/validate/aws-credentials" },
   { method: "post", path: "/api/setup/validate/anthropic-key" },
   { method: "post", path: "/api/setup/validate/copilot-token" },
@@ -348,6 +349,7 @@ const MIGRATED_ROUTES: MigratedRoute[] = [
   { method: "post", path: "/api/setup/validate/gemini-key" },
   { method: "post", path: "/api/setup/repos" },
   { method: "post", path: "/api/setup/repos/gitlab" },
+  { method: "post", path: "/api/setup/repos/bitbucket" },
   { method: "post", path: "/api/setup/repos/codecommit" },
   { method: "post", path: "/api/setup/validate/repo" },
   // secrets.ts (3)
@@ -445,8 +447,8 @@ describe("OpenAPI spec — migrated routes are fully documented", () => {
     // pickable-secrets route, 4 model-provider routes and 2 work-defaults
     // routes → 178. Then the two task PR routes (attach / stop tracking) → 180.
     // Then the Work resource (list, create, get, save, delete, runs,
-    // triggers ×4) → 190.
-    expect(MIGRATED_ROUTES).toHaveLength(190);
+    // triggers ×4) → 190. Two Bitbucket setup routes → 192.
+    expect(MIGRATED_ROUTES).toHaveLength(192);
   });
 
   it("components.schemas contains the Task domain types", () => {

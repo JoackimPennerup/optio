@@ -112,6 +112,11 @@ function envHosts(...names: string[]): string[] {
     .filter(Boolean);
 }
 
+/** A Bitbucket Data Center destination explicitly configured by the operator. */
+export function isListedBitbucketHost(host: string): boolean {
+  return envHosts("BITBUCKET_HOSTS", "OPTIO_BITBUCKET_HOSTS").includes(host.toLowerCase());
+}
+
 /**
  * Hosts the deployment's git credentials may be sent to without a lookup:
  * github.com, gitlab.com, and the hosts an operator listed (`GITLAB_HOSTS` /
