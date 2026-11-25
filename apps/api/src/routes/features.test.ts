@@ -40,7 +40,7 @@ describe("GET /api/features", () => {
       "triggers",
     ]);
     expect(body.runtimes).toHaveLength(8);
-    expect(body.gitPlatforms).toEqual(["github", "gitlab", "codecommit"]);
+    expect(body.gitPlatforms).toEqual(["github", "gitlab", "codecommit", "bitbucket"]);
     expect(body.triggers).toHaveLength(15);
     expect(body.ticketSources).toHaveLength(5);
     expect(body.connectionProviders).toHaveLength(13);

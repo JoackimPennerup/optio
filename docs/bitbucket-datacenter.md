@@ -14,6 +14,10 @@ uses the Data Center REST API for repository, branch, pull request, review,
 comment and build status operations. Its git credential helper uses
 `x-token-auth` with the access token for HTTPS clones and pushes.
 
+During initial setup, choose **Bitbucket Data Center** in the **Git Provider**
+step, enter the listed host and access token, then validate it. The setup
+wizard can suggest repositories from projects the token can access.
+
 Bitbucket Data Center has no built-in issue tracker, so issue operations
 are unavailable. For a private host, also allow outbound access with
 `OPTIO_OUTBOUND_ALLOWED_HOSTS` as described in the deployment network policy.

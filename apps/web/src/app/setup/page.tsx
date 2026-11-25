@@ -8,7 +8,8 @@ import { cn } from "@/lib/utils";
 import { isOfflineUi } from "@/lib/offline-ui";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useFeatures } from "@/hooks/use-features";
-import { featureAllows } from "@optio/shared";
+import { featureAllows, parseRepoUrl } from "@optio/shared";
+import { BrandIcon } from "@/components/brand-icon";
 import { setupTrackerSources } from "@/components/setup/ticket-sources";
 import { toast } from "sonner";
 import { OptioMark } from "@/components/optio-mark";
@@ -118,6 +119,11 @@ export default function SetupPage() {
   const [gitlabUser, setGitlabUser] = useState<{ login: string; name: string } | null>(null);
   const [gitlabValidated, setGitlabValidated] = useState(false);
   const [gitlabError, setGitlabError] = useState("");
+  const [bitbucketEnabled, setBitbucketEnabled] = useState(false);
+  const [bitbucketHost, setBitbucketHost] = useState("");
+  const [bitbucketToken, setBitbucketToken] = useState("");
+  const [bitbucketValidated, setBitbucketValidated] = useState(false);
+  const [bitbucketError, setBitbucketError] = useState("");
   const [codecommitEnabled, setCodecommitEnabled] = useState(false);
   const [awsAccessKeyId, setAwsAccessKeyId] = useState("");
   const [awsSecretAccessKey, setAwsSecretAccessKey] = useState("");
@@ -231,9 +237,11 @@ export default function SetupPage() {
   useEffect(() => {
     if (!offersGit("github")) setGithubEnabled(false);
     if (!offersGit("gitlab")) setGitlabEnabled(false);
+    if (!offersGit("bitbucket")) setBitbucketEnabled(false);
     if (!offersGit("codecommit")) setCodecommitEnabled(false);
     if (!offersGit("github")) {
       if (offersGit("gitlab")) setGitlabEnabled(true);
+      else if (offersGit("bitbucket")) setBitbucketEnabled(true);
       else if (offersGit("codecommit")) setCodecommitEnabled(true);
     }
   }, [offersGit]);
@@ -276,6 +284,8 @@ export default function SetupPage() {
         fetches.push(api.listUserRepos(githubToken || ""));
       if (offersGit("gitlab") && gitlabEnabled && gitlabToken)
         fetches.push(api.listGitlabRepos(gitlabToken, gitlabHost || undefined));
+      if (offersGit("bitbucket") && bitbucketEnabled && bitbucketToken && bitbucketHost)
+        fetches.push(api.listBitbucketRepos(bitbucketToken, bitbucketHost));
       if (offersGit("codecommit") && codecommitEnabled && awsAccessKeyId && awsSecretAccessKey)
         fetches.push(
           api.listCodecommitRepos({
@@ -416,6 +426,20 @@ export default function SetupPage() {
     setLoading(false);
   };
 
+  const validateBitbucket = async () => {
+    if (!bitbucketToken.trim() || !bitbucketHost.trim()) return;
+    setLoading(true);
+    setBitbucketError("");
+    try {
+      const res = await api.validateBitbucketToken(bitbucketToken, bitbucketHost.trim());
+      if (res.valid) setBitbucketValidated(true);
+      else setBitbucketError(res.error ?? "Invalid token or host");
+    } catch (err) {
+      setBitbucketError(err instanceof Error ? err.message : "Validation failed");
+    }
+    setLoading(false);
+  };
+
   const validateAnthropic = async (keyOverride?: string) => {
     const key = keyOverride ?? anthropicKey;
     if (!key.trim()) return;
@@ -512,7 +536,20 @@ export default function SetupPage() {
       if (!repoUrl.trim()) return;
       setLoading(true);
       try {
-        const res = await api.validateRepo(repoUrl, githubToken || undefined);
+        const bitbucketRepo = parseRepoUrl(repoUrl, "bitbucket");
+        const gitlabRepo = parseRepoUrl(repoUrl, "gitlab");
+        const isBitbucket =
+          bitbucketEnabled && bitbucketRepo?.host === bitbucketHost.trim().toLowerCase();
+        const isGitlab = gitlabEnabled && gitlabRepo?.host === gitlabHost.trim().toLowerCase();
+        const res = await api.validateRepo(
+          repoUrl,
+          isBitbucket
+            ? bitbucketToken || undefined
+            : isGitlab
+              ? gitlabToken || undefined
+              : githubToken || undefined,
+          isBitbucket ? "bitbucket" : isGitlab ? "gitlab" : undefined,
+        );
         if (res.valid && res.repo) {
           setRepos((prev) =>
             prev.map((r) =>
@@ -538,7 +575,15 @@ export default function SetupPage() {
       }
       setLoading(false);
     },
-    [githubToken],
+    [
+      githubToken,
+      gitlabEnabled,
+      gitlabHost,
+      gitlabToken,
+      bitbucketEnabled,
+      bitbucketHost,
+      bitbucketToken,
+    ],
   );
 
   // Validate newly added repos when repos state changes
@@ -563,6 +608,13 @@ export default function SetupPage() {
         if (gitlabHost && gitlabHost !== "gitlab.com") {
           await api.createSecret({ name: "GITLAB_HOST", value: gitlabHost });
         }
+      }
+      if (bitbucketEnabled && bitbucketToken.trim() && bitbucketValidated) {
+        const tokenName = `BITBUCKET_TOKEN_${bitbucketHost
+          .trim()
+          .toUpperCase()
+          .replace(/[^A-Z0-9]/g, "_")}`;
+        await api.createSecret({ name: tokenName, value: bitbucketToken });
       }
       if (codecommitEnabled && awsAccessKeyId.trim() && awsSecretAccessKey.trim() && awsValidated) {
         await api.createSecret({ name: "AWS_ACCESS_KEY_ID", value: awsAccessKeyId });
@@ -957,7 +1009,7 @@ export default function SetupPage() {
                 pull/merge requests. Choose your provider and add a token.
               </p>
 
-              {/* Provider selector (both can be enabled) */}
+              {/* Provider selector (multiple can be enabled) */}
               <div className="flex gap-2">
                 {offersGit("github") && (
                   <button
@@ -987,6 +1039,20 @@ export default function SetupPage() {
                       <path d="M22.65 14.39L12 22.13 1.35 14.39a.84.84 0 0 1-.3-.94l1.22-3.78 2.44-7.51A.42.42 0 0 1 4.82 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.49h8.1l2.44-7.51A.42.42 0 0 1 18.6 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.51L23 13.45a.84.84 0 0 1-.35.94z" />
                     </svg>
                     GitLab
+                  </button>
+                )}
+                {offersGit("bitbucket") && (
+                  <button
+                    onClick={() => setBitbucketEnabled((v) => !v)}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2 rounded-md text-sm border transition-colors",
+                      bitbucketEnabled
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border text-text-muted hover:bg-bg-hover",
+                    )}
+                  >
+                    <BrandIcon brand="bitbucket" className="w-4 h-4" />
+                    Bitbucket Data Center
                   </button>
                 )}
                 {offersGit("codecommit") && (
@@ -1152,6 +1218,59 @@ export default function SetupPage() {
                 </>
               )}
 
+              {offersGit("bitbucket") && bitbucketEnabled && (
+                <>
+                  <p className="text-text-muted text-sm">
+                    Add the host to <code>BITBUCKET_HOSTS</code> in the API environment before
+                    validating. For private hosts, also configure{" "}
+                    <code>OPTIO_OUTBOUND_ALLOWED_HOSTS</code>.
+                  </p>
+                  <div>
+                    <label className="block text-sm text-text-muted mb-1.5">
+                      Bitbucket Data Center host
+                    </label>
+                    <input
+                      type="text"
+                      value={bitbucketHost}
+                      onChange={(e) => {
+                        setBitbucketHost(e.target.value);
+                        setBitbucketValidated(false);
+                        setBitbucketError("");
+                      }}
+                      placeholder="bitbucket.example.com"
+                      className={inputClass()}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-text-muted mb-1.5">
+                      Bitbucket access token
+                    </label>
+                    <input
+                      type="password"
+                      value={bitbucketToken}
+                      onChange={(e) => {
+                        setBitbucketToken(e.target.value);
+                        setBitbucketValidated(false);
+                        setBitbucketError("");
+                      }}
+                      className={inputClass()}
+                    />
+                  </div>
+                  {bitbucketError && (
+                    <div className="flex items-center gap-2 text-error text-sm">
+                      <AlertCircle className="w-4 h-4" />
+                      {bitbucketError}
+                    </div>
+                  )}
+                  {bitbucketValidated && (
+                    <div className="flex items-center gap-2 text-success text-sm p-2 rounded-md bg-success/10">
+                      <CheckCircle className="w-4 h-4" />
+                      Bitbucket access verified
+                    </div>
+                  )}
+                </>
+              )}
+
               {/* CodeCommit form */}
               {offersGit("codecommit") && codecommitEnabled && (
                 <>
@@ -1260,6 +1379,15 @@ export default function SetupPage() {
                       {loading ? <Loader2 className="animate-spin" /> : "Validate GitLab"}
                     </Button>
                   )}
+                  {bitbucketEnabled && !bitbucketValidated && (
+                    <Button
+                      variant="secondary"
+                      onClick={validateBitbucket}
+                      disabled={loading || !bitbucketToken.trim() || !bitbucketHost.trim()}
+                    >
+                      {loading ? <Loader2 className="animate-spin" /> : "Validate Bitbucket"}
+                    </Button>
+                  )}
                   {codecommitEnabled && !awsValidated && (
                     <Button
                       variant="secondary"
@@ -1278,9 +1406,13 @@ export default function SetupPage() {
                     onClick={saveGitStep}
                     disabled={
                       loading ||
-                      (!githubEnabled && !gitlabEnabled && !codecommitEnabled) ||
+                      (!githubEnabled &&
+                        !gitlabEnabled &&
+                        !bitbucketEnabled &&
+                        !codecommitEnabled) ||
                       (githubEnabled && !githubAppConfigured && !githubValidated) ||
                       (gitlabEnabled && !gitlabValidated) ||
+                      (bitbucketEnabled && !bitbucketValidated) ||
                       (codecommitEnabled && !awsValidated)
                     }
                   >
