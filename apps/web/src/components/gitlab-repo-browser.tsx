@@ -29,7 +29,7 @@ export function GitLabRepoBrowser({
   onPick: (repo: BrowsedProject) => void;
   platform?: "gitlab" | "bitbucket";
 }) {
-  const label = platform === "gitlab" ? "GitLab" : "Bitbucket Data Center";
+  const label = platform === "gitlab" ? "GitLab" : "Bitbucket Server / Data Center";
   const [query, setQuery] = useState("");
   const [repos, setRepos] = useState<BrowsedProject[]>([]);
   const [host, setHost] = useState<string | null>(null);

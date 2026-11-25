@@ -378,7 +378,7 @@ type BrowsablePlatform = (typeof BROWSABLE_PLATFORMS)[number];
 const PLATFORM_LABELS: Record<BrowsablePlatform, string> = {
   github: "GitHub",
   gitlab: "GitLab",
-  bitbucket: "Bitbucket Data Center",
+  bitbucket: "Bitbucket Server / Data Center",
 };
 
 /** Secrets that say a GitLab is set up (a token at any scope, the wizard's host). */

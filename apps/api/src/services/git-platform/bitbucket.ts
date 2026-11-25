@@ -17,7 +17,7 @@ import type {
 type Json = Record<string, any>;
 type Page<T> = { values?: T[]; isLastPage?: boolean; nextPageStart?: number };
 
-/** Bitbucket Data Center (Server) REST API. `owner` is its project key. */
+/** Bitbucket Server / Data Center (Server) REST API. `owner` is its project key. */
 export class BitbucketPlatform implements GitPlatform {
   readonly type = "bitbucket" as const;
 
@@ -193,9 +193,13 @@ export class BitbucketPlatform implements GitPlatform {
     }
     const url = new URL(`${this.prUrl(ri, number)}/merge`);
     url.searchParams.set("version", String(current.version));
-    if (method !== "merge")
-      url.searchParams.set("strategyId", method === "squash" ? "squash" : "rebase");
-    await this.request<Json>(url.toString(), { method: "POST" });
+    await this.request<Json>(url.toString(), {
+      method: "POST",
+      body: JSON.stringify({
+        version: current.version,
+        ...(method !== "merge" ? { strategyId: method === "squash" ? "squash" : "rebase" } : {}),
+      }),
+    });
   }
 
   async submitReview(
@@ -246,16 +250,16 @@ export class BitbucketPlatform implements GitPlatform {
     return [];
   }
   async createLabel(): Promise<void> {
-    throw new Error("Bitbucket Data Center does not support issue labels");
+    throw new Error("Bitbucket Server / Data Center does not support issue labels");
   }
   async addLabelsToIssue(): Promise<void> {
-    throw new Error("Bitbucket Data Center does not support issues");
+    throw new Error("Bitbucket Server / Data Center does not support issues");
   }
   async createIssueComment(): Promise<void> {
-    throw new Error("Bitbucket Data Center does not support issues");
+    throw new Error("Bitbucket Server / Data Center does not support issues");
   }
   async closeIssue(): Promise<void> {
-    throw new Error("Bitbucket Data Center does not support issues");
+    throw new Error("Bitbucket Server / Data Center does not support issues");
   }
 
   async getRepoMetadata(ri: RepoIdentifier): Promise<RepoMetadata> {

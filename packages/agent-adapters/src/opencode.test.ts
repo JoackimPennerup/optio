@@ -189,7 +189,7 @@ describe("OpenCodeAdapter", () => {
       expect(result.prUrl).toBe("https://gitlab.com/org/repo/-/merge_requests/7");
     });
 
-    it("extracts Bitbucket Data Center PR URL from logs", () => {
+    it("extracts Bitbucket Server / Data Center PR URL from logs", () => {
       const logs = "Opened https://bitbucket.example/projects/APP/repos/service/pull-requests/12";
       expect(adapter.parseResult(0, logs).prUrl).toBe(
         "https://bitbucket.example/projects/APP/repos/service/pull-requests/12",

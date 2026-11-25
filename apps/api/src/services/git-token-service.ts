@@ -70,7 +70,9 @@ export async function getGitToken(
     }
     const envToken = (hostName ? process.env[hostName] : undefined) || process.env.BITBUCKET_TOKEN;
     if (envToken) return envToken;
-    throw new Error("No Bitbucket Data Center token available. Add a BITBUCKET_TOKEN secret.");
+    throw new Error(
+      "No Bitbucket Server / Data Center token available. Add a BITBUCKET_TOKEN secret.",
+    );
   }
 
   // The person's own token, then the workspace's and organization's,
@@ -112,7 +114,7 @@ function envHosts(...names: string[]): string[] {
     .filter(Boolean);
 }
 
-/** A Bitbucket Data Center destination explicitly configured by the operator. */
+/** A Bitbucket Server / Data Center destination explicitly configured by the operator. */
 export function isListedBitbucketHost(host: string): boolean {
   return envHosts("BITBUCKET_HOSTS", "OPTIO_BITBUCKET_HOSTS").includes(host.toLowerCase());
 }
@@ -151,6 +153,7 @@ export async function isTrustedGitHost(
   ri: Pick<RepoIdentifier, "host" | "platform">,
 ): Promise<boolean> {
   if (ri.platform === "codecommit") return true;
+  if (ri.platform === "bitbucket") return isListedBitbucketHost(ri.host);
   return isListedGitHost(ri.host);
 }
 

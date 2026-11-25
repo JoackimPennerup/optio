@@ -56,6 +56,18 @@ describe("BitbucketPlatform", () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
+  it("sends the merge strategy in the 8.9 request body", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(new Response(JSON.stringify(row), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ ...row, state: "MERGED" }), { status: 200 }),
+      );
+    await api.mergePullRequest(ri, 42, "squash", "abc");
+    const [url, init] = vi.mocked(fetch).mock.calls[1];
+    expect(String(url)).toContain("/pull-requests/42/merge?version=3");
+    expect(JSON.parse(String(init?.body))).toEqual({ version: 3, strategyId: "squash" });
+  });
+
   it("uses Bitbucket's nextPageStart while listing pull requests", async () => {
     vi.mocked(fetch)
       .mockResolvedValueOnce(

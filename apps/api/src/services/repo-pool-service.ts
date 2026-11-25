@@ -16,6 +16,7 @@ import {
   PRESET_IMAGES,
   generateRepoPodName,
   normalizeRepoUrl,
+  parseRepoUrl,
   shellQuote,
 } from "@optio/shared";
 import {
@@ -94,7 +95,28 @@ export async function repoPodEnv(
   });
   const podEnv = { ...env, ...setupSecrets };
   const { restrictGitCredentialsToRepo } = await import("./git-access-env.js");
-  await restrictGitCredentialsToRepo(podEnv, repoUrl);
+  if (await restrictGitCredentialsToRepo(podEnv, repoUrl)) {
+    const repo = parseRepoUrl(repoUrl);
+    if (repo?.platform === "bitbucket") {
+      // The repo pod is shared across runs. Its initial clone uses a
+      // workspace/global token; each run resolves its own token separately.
+      const { getGitToken } = await import("./git-token-service.js");
+      const token = await getGitToken("bitbucket", {
+        workspaceId,
+        server: true,
+        host: repo.host,
+      }).catch(() => null);
+      if (token) {
+        podEnv.BITBUCKET_TOKEN = token;
+      }
+      if (podEnv.BITBUCKET_TOKEN) {
+        podEnv.BITBUCKET_HOST = repo.host;
+      }
+    } else {
+      delete podEnv.BITBUCKET_TOKEN;
+      delete podEnv.BITBUCKET_HOST;
+    }
+  }
   return podEnv;
 }
 
