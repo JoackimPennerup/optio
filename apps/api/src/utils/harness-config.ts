@@ -108,6 +108,11 @@ export const EXPORT_OPENCODE_CONFIG: readonly string[] = [
   `if [ -n "\${${OPTIO_OPENCODE_CONFIG}:-}" ]; then export OPENCODE_CONFIG="\$${OPTIO_OPENCODE_CONFIG}"; fi`,
 ];
 
+/** Kilo uses the same per-run config payload, under its own environment key. */
+export const EXPORT_KILO_CONFIG: readonly string[] = [
+  `if [ -n "\${${OPTIO_OPENCODE_CONFIG}:-}" ]; then export KILO_CONFIG="\$${OPTIO_OPENCODE_CONFIG}"; fi`,
+];
+
 /** Copilot's flag naming the run's MCP config file, or nothing. */
 export function copilotMcpConfigFlag(env: Record<string, string>): string {
   const file = env[OPTIO_COPILOT_MCP_CONFIG];
@@ -162,6 +167,13 @@ export function opencodeConfigJson(servers: Servers): string {
     },
     null,
     2,
+  );
+}
+
+export function kiloConfigJson(servers: Servers): string {
+  return opencodeConfigJson(servers).replace(
+    "https://opencode.ai/config.json",
+    "https://app.kilo.ai/config.json",
   );
 }
 

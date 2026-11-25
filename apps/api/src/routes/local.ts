@@ -119,7 +119,7 @@ const blueprintBodySchema = z
         "Saved prompt (Prompts library) used as the agent prompt instead of commandTemplate",
       ),
     agent: z
-      .enum(["claude-code", "codex", "cursor", "gemini", "opencode"])
+      .enum(["claude-code", "codex", "cursor", "gemini", "opencode", "kilo"])
       .nullish()
       .describe("Run the rendered template as this agent (gets attention hooks); null = shell"),
     spawnMode: z.enum(["auto", "hold"]).optional(),
@@ -1330,7 +1330,7 @@ export async function localRoutes(rawApp: FastifyInstance) {
 /** Map repo defaultAgentType values onto agents the daemon can launch. */
 function normalizeLocalAgent(
   agentType: string | null | undefined,
-): "claude-code" | "codex" | "cursor" | "gemini" | "opencode" {
+): "claude-code" | "codex" | "cursor" | "gemini" | "opencode" | "kilo" {
   switch (agentType) {
     case "codex":
       return "codex";
@@ -1340,6 +1340,8 @@ function normalizeLocalAgent(
       return "gemini";
     case "opencode":
       return "opencode";
+    case "kilo":
+      return "kilo";
     default:
       return "claude-code";
   }

@@ -349,7 +349,7 @@ export function startPrReviewWorker() {
             ? resolvedModel
             : (repoConfig.copilotModel ?? undefined);
         const opencodeModel =
-          agentType === "opencode"
+          agentType === "opencode" || agentType === "kilo"
             ? resolvedModel
             : (repoConfig.opencodeModel ?? opencodeDefaultModel);
         const geminiModel =

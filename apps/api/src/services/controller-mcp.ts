@@ -32,6 +32,7 @@ const GET_MODELS_PROVIDERS: readonly AgentProviderId[] = [
   "gemini",
   "copilot",
   "opencode",
+  "kilo",
   "openclaw",
   "cursor",
 ];

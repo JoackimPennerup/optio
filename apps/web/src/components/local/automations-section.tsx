@@ -83,16 +83,17 @@ type TriggerType =
   | "sentry"
   | "alertmanager"
   | "datadog";
-type Agent = "claude-code" | "codex" | "cursor" | "gemini" | "opencode";
+type Agent = "claude-code" | "codex" | "cursor" | "gemini" | "opencode" | "kilo";
 type SessionMode = "interactive" | "headless";
 
-const AGENTS: Agent[] = ["claude-code", "codex", "cursor", "gemini", "opencode"];
+const AGENTS: Agent[] = ["claude-code", "codex", "cursor", "gemini", "opencode", "kilo"];
 const AGENT_LABELS: Record<string, string> = {
   "claude-code": "Claude Code",
   codex: "Codex",
   cursor: "Cursor",
   gemini: "Gemini",
   opencode: "OpenCode",
+  kilo: "Kilo CLI",
 };
 const TICKET_SOURCES = ["github", "gitlab", "linear", "jira", "notion"] as const;
 

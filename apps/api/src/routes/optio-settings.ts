@@ -12,7 +12,7 @@ import { runtimeRefusal } from "../services/feature-guard.js";
 const updateSettingsSchema = z
   .object({
     agentRuntime: z
-      .enum(["claude-code", "codex", "copilot", "gemini", "opencode", "cursor", "pi"])
+      .enum(["claude-code", "codex", "copilot", "gemini", "opencode", "kilo", "cursor", "pi"])
       .optional(),
     agentOptions: z.record(z.union([z.string().max(2000), z.boolean()])).optional(),
     model: z

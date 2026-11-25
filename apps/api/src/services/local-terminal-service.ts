@@ -60,6 +60,7 @@ const AGENT_BINS: Record<string, string> = {
   cursor: "cursor-agent",
   gemini: "gemini",
   opencode: "opencode",
+  kilo: "kilo",
 };
 
 function ownedBy(userId: string | null | undefined) {

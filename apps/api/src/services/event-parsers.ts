@@ -26,6 +26,7 @@ export function getEventParser(agentType: string | null | undefined): AgentEvent
     case "copilot":
       return parseCopilotEvent;
     case "opencode":
+    case "kilo":
       return parseOpenCodeEvent;
     case "gemini":
       return parseGeminiEvent;

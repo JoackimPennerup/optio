@@ -98,6 +98,7 @@ import {
   copilotMcpConfigFlag,
   EXPORT_GEMINI_HOME,
   EXPORT_OPENCODE_CONFIG,
+  EXPORT_KILO_CONFIG,
   runHome,
 } from "../utils/harness-config.js";
 import { applyGitAccess, requiredGitTokenSecret } from "../services/git-access-env.js";
@@ -1704,6 +1705,22 @@ export function buildAgentCommand(
         // With the headless rules on, approve what no rule denies, so a
         // headless ask never aborts (#585).
         `opencode run --format json${autoApprove}${modelFlag}${agentFlag}${resumeFlag} "$OPTIO_PROMPT" </dev/null`,
+      ];
+    }
+    case "kilo": {
+      const modelFlag = env.OPTIO_OPENCODE_MODEL
+        ? ` --model ${shellQuote(env.OPTIO_OPENCODE_MODEL)}`
+        : "";
+      const agentFlag = env.OPTIO_OPENCODE_AGENT
+        ? ` --agent ${shellQuote(env.OPTIO_OPENCODE_AGENT)}`
+        : "";
+      const resumeFlag = opts?.resumeSessionId
+        ? ` --session ${shellQuote(opts.resumeSessionId)}`
+        : "";
+      return [
+        `echo "[optio] Running Kilo CLI..."`,
+        ...EXPORT_KILO_CONFIG,
+        `kilo run --format json --auto${modelFlag}${agentFlag}${resumeFlag} "$OPTIO_PROMPT" </dev/null`,
       ];
     }
     case "gemini": {

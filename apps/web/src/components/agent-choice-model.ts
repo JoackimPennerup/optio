@@ -21,6 +21,7 @@ export const RUNTIMES: Array<{ value: string; label: string }> = [
   { value: "cursor", label: "Cursor" },
   { value: "pi", label: "Pi" },
   { value: "opencode", label: "OpenCode" },
+  { value: "kilo", label: "Kilo CLI" },
   { value: "openclaw", label: "OpenClaw" },
 ];
 

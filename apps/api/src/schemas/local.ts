@@ -109,7 +109,7 @@ export const LocalTerminalSpecSchema = z
     z.object({ kind: z.literal("command"), command: z.string().min(1).max(4000) }),
     z.object({
       kind: z.literal("agent"),
-      agent: z.enum(["claude-code", "codex", "cursor", "gemini", "opencode"]),
+      agent: z.enum(["claude-code", "codex", "cursor", "gemini", "opencode", "kilo"]),
       prompt: z.string().max(100_000).optional(),
       mode: z
         .enum(["interactive", "headless"])
@@ -323,7 +323,7 @@ export const LocalBlueprintSchema = z
       .describe(
         "Saved prompt (Prompts library) used as the agent prompt instead of commandTemplate",
       ),
-    agent: z.enum(["claude-code", "codex", "cursor", "gemini", "opencode"]).nullable(),
+    agent: z.enum(["claude-code", "codex", "cursor", "gemini", "opencode", "kilo"]).nullable(),
     spawnMode: z.enum(["auto", "hold"]),
     sessionMode: z
       .enum(["interactive", "headless"])
