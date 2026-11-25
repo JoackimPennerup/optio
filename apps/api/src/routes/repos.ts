@@ -39,7 +39,7 @@ const createRepoSchema = z
     defaultBranch: z.string().optional().describe("Default branch name (e.g. `main`)"),
     isPrivate: z.boolean().optional(),
     gitPlatform: z
-      .enum(["github", "gitlab", "codecommit"])
+      .enum(["github", "gitlab", "codecommit", "bitbucket"])
       .optional()
       .describe(
         "The repository's git platform, for a host Optio cannot tell from the URL " +
@@ -183,7 +183,7 @@ const RepoBrowseQuerySchema = z
   .object({
     q: z.string().max(200).optional().describe("Filter by path, name or description"),
     platform: z
-      .enum(["github", "gitlab", "codecommit"])
+      .enum(["github", "gitlab", "codecommit", "bitbucket"])
       .optional()
       .describe("The git platform to list; defaults to github"),
     host: z
@@ -200,7 +200,7 @@ const RepoBrowseQuerySchema = z
 const RepoBrowseResponseSchema = z
   .object({
     repos: BrowseResponseSchema.shape.repos,
-    platform: z.enum(["github", "gitlab", "codecommit"]),
+    platform: z.enum(["github", "gitlab", "codecommit", "bitbucket"]),
     host: z.string().nullable().describe("The platform host that was listed"),
     hosts: z
       .array(z.string())
@@ -227,6 +227,12 @@ async function browseHosts(
   workspaceId: string | null,
 ): Promise<string[]> {
   if (platform === "github") return ["github.com"];
+  if (platform === "bitbucket") {
+    return (process.env.BITBUCKET_HOSTS ?? process.env.OPTIO_BITBUCKET_HOSTS ?? "")
+      .split(",")
+      .map(bareHost)
+      .filter(Boolean);
+  }
   if (platform !== "gitlab") return [];
   const found: string[] = [];
   found.push(
@@ -252,7 +258,9 @@ async function browseHosts(
 const locationOf = (platform: GitPlatformType, host: string): PlatformLocation =>
   platform === "github"
     ? { host: "github.com", apiBaseUrl: "https://api.github.com" }
-    : { host, apiBaseUrl: `https://${host}/api/v4` };
+    : platform === "bitbucket"
+      ? { host, apiBaseUrl: `https://${host}/rest/api/latest` }
+      : { host, apiBaseUrl: `https://${host}/api/v4` };
 
 const DetectResponseSchema = z.object({ detected: z.unknown() });
 
@@ -381,7 +389,7 @@ export async function repoRoutes(rawApp: FastifyInstance) {
         reply.send({ repos: [], platform, host: at.host, hosts, error });
       if (!(await isTrustedGitHost({ host: at.host, platform }))) {
         return empty(
-          "A deployment operator must list this host in GITHUB_HOSTS / GITLAB_HOSTS before using stored credentials.",
+          "A deployment operator must list this host in GITHUB_HOSTS / GITLAB_HOSTS / BITBUCKET_HOSTS before using stored credentials.",
         );
       }
       let token: string;

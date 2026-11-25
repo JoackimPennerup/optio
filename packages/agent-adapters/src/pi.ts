@@ -43,7 +43,7 @@ export class PiAdapter implements AgentAdapter {
 
   createResultParser(): AgentResultParser {
     const pr = firstMatch(
-      /https:\/\/(?![\w.-]+\/api\/)[^\s"\\]+\/(?:pull\/\d+|-\/merge_requests\/\d+)/,
+      /https:\/\/(?![\w.-]+\/api\/)[^\s"\\]+\/(?:pull\/\d+|-\/merge_requests\/\d+|pull-requests\/\d+)/,
     );
     let summary: string | undefined;
     let error: string | undefined;

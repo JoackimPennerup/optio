@@ -21,7 +21,7 @@ import { getGitToken, isTrustedGitHost } from "./git-token-service.js";
 export function requiredGitTokenSecret(platform: GitPlatformType | undefined): string | null {
   // Host-scoped secrets and API environment fallback are resolved best effort
   // below/the signed helper; requiring plain GITLAB_TOKEN breaks both setups.
-  if (platform === "gitlab") return null;
+  if (platform === "gitlab" || platform === "bitbucket") return null;
   return isGitHubAppConfigured() ? null : "GITHUB_TOKEN";
 }
 
@@ -40,6 +40,8 @@ export async function restrictGitCredentialsToRepo(
     "GITHUB_TOKEN",
     "GITLAB_TOKEN",
     "GITLAB_HOST",
+    "BITBUCKET_TOKEN",
+    "BITBUCKET_HOST",
     "OPTIO_GIT_CREDENTIAL_URL",
     "OPTIO_GIT_TASK_CREDENTIAL_URL",
     "OPTIO_CREDENTIAL_SECRET",
@@ -68,6 +70,22 @@ export async function applyGitAccess(
 ): Promise<void> {
   if (!(await restrictGitCredentialsToRepo(env, opts.repoUrl))) return;
   const repo = opts.repoUrl ? parseRepoUrl(opts.repoUrl) : null;
+  if (repo?.platform === "bitbucket" && !env.BITBUCKET_TOKEN) {
+    const token = await getGitToken("bitbucket", {
+      workspaceId: opts.workspaceId,
+      userId: opts.ownerUserId ?? undefined,
+      host: repo.host,
+    }).catch(() => null);
+    if (token) {
+      env.BITBUCKET_TOKEN = token;
+      env.BITBUCKET_HOST = repo.host;
+    }
+  }
+  if (repo?.platform === "bitbucket") {
+    env.OPTIO_BB_API_URL = repo.apiBaseUrl;
+    env.OPTIO_BB_PROJECT = repo.owner;
+    env.OPTIO_BB_REPO = repo.repo;
+  }
   if (repo?.platform === "gitlab" && !env.GITLAB_TOKEN) {
     const token = await getGitToken("gitlab", {
       workspaceId: opts.workspaceId,
@@ -84,7 +102,7 @@ export async function applyGitAccess(
   }
   for (const name of [
     "GITHUB_TOKEN",
-    ...(repo?.platform === "gitlab" ? [] : ["GITLAB_TOKEN"]),
+    ...(repo?.platform === "gitlab" || repo?.platform === "bitbucket" ? [] : ["GITLAB_TOKEN"]),
     "GITLAB_HOST",
   ]) {
     if (env[name]) continue;

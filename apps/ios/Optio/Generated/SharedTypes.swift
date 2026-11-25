@@ -3238,10 +3238,11 @@ public enum GitPlatformType: String, Codable, Hashable, Sendable, CaseIterable {
     case github = "github"
     case gitlab = "gitlab"
     case codecommit = "codecommit"
+    case bitbucket = "bitbucket"
     /// Fallback for raw values this client does not know about yet.
     case unknown = "__unknown__"
 
-    public static let allCases: [GitPlatformType] = [.github, .gitlab, .codecommit]
+    public static let allCases: [GitPlatformType] = [.github, .gitlab, .codecommit, .bitbucket]
 
     public init(from decoder: any Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)

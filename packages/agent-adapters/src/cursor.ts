@@ -68,7 +68,7 @@ export class CursorAdapter implements AgentAdapter {
   createResultParser(): AgentResultParser {
     // Extract the PR URL from anywhere in the output (its first mention)
     const pr = firstMatch(
-      /https:\/\/(?![\w.-]+\/api\/)[^\s"]+\/(?:pull\/\d+|-\/merge_requests\/\d+)/,
+      /https:\/\/(?![\w.-]+\/api\/)[^\s"]+\/(?:pull\/\d+|-\/merge_requests\/\d+|pull-requests\/\d+)/,
     );
     const parsed = this.logParser();
     return {

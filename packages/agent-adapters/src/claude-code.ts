@@ -121,7 +121,7 @@ export class ClaudeCodeAdapter implements AgentAdapter {
   createResultParser(): AgentResultParser {
     // Match both GitHub PR URLs and GitLab MR URLs (web URLs only, not API URLs)
     const pr = firstMatch(
-      /https:\/\/(?![\w.-]+\/api\/)[^\s"]+\/(?:pull\/\d+|-\/merge_requests\/\d+)/,
+      /https:\/\/(?![\w.-]+\/api\/)[^\s"]+\/(?:pull\/\d+|-\/merge_requests\/\d+|pull-requests\/\d+)/,
     );
     // Cost: take the LAST total_cost_usd, not the first. In stream-json mode a
     // multi-turn run (mid-task user messages) emits a `result` event PER TURN,

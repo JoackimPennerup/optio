@@ -46,7 +46,7 @@ const validateRepoSchema = z
   .object({
     repoUrl: z.string().min(1),
     token: z.string().optional(),
-    gitPlatform: z.enum(["github", "gitlab", "codecommit"]).optional(),
+    gitPlatform: z.enum(["github", "gitlab", "codecommit", "bitbucket"]).optional(),
   })
   .describe("Body for validating access to a specific repo URL");
 

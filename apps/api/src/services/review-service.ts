@@ -144,6 +144,7 @@ export async function launchReview(parentTaskId: string): Promise<string> {
     resolveRepoPlatform(parentTask.repoUrl, repoConfig?.gitPlatform) ?? undefined,
   );
   const isGitLab = parsedRepo?.platform === "gitlab";
+  const isBitbucket = parsedRepo?.platform === "bitbucket";
   const isCodeCommit = parsedRepo?.platform === "codecommit";
 
   const renderedPrompt = renderPromptTemplate(reviewTemplate, {
@@ -153,6 +154,7 @@ export async function launchReview(parentTaskId: string): Promise<string> {
     TASK_TITLE: shellSafeTitle(parentTask.title),
     TEST_COMMAND: repoConfig?.testCommand ?? "",
     GIT_PLATFORM_GITLAB: isGitLab ? "true" : "",
+    GIT_PLATFORM_BITBUCKET: isBitbucket ? "true" : "",
     GIT_PLATFORM_CODECOMMIT: isCodeCommit ? "true" : "",
     CODECOMMIT_REPO: isCodeCommit ? (parsedRepo?.repo ?? "") : "",
     BASE_BRANCH: parentTask.repoBranch ?? repoConfig?.defaultBranch ?? "main",

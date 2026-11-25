@@ -434,6 +434,7 @@ export function startTaskWorker() {
         );
         const repoName = parsedRepo ? `${parsedRepo.owner}/${parsedRepo.repo}` : task.repoUrl;
         const isGitLab = parsedRepo?.platform === "gitlab";
+        const isBitbucket = parsedRepo?.platform === "bitbucket";
         const isCodeCommit = parsedRepo?.platform === "codecommit";
         const branchName = `${TASK_BRANCH_PREFIX}${task.id}`;
         const taskFilePath = TASK_FILE_PATH;
@@ -457,6 +458,7 @@ export function startTaskWorker() {
           DRAFT_PR: String(cautious),
           ISSUE_NUMBER: task.ticketExternalId ?? "",
           GIT_PLATFORM_GITLAB: isGitLab ? "true" : "",
+          GIT_PLATFORM_BITBUCKET: isBitbucket ? "true" : "",
           GIT_PLATFORM_CODECOMMIT: isCodeCommit ? "true" : "",
           CODECOMMIT_REPO: isCodeCommit ? (parsedRepo?.repo ?? "") : "",
           BASE_BRANCH: task.repoBranch ?? repoConfig?.defaultBranch ?? "main",

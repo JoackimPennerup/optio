@@ -1391,6 +1391,7 @@ enum class GitPlatformType(override val raw: String) : RawEnum {
     GITHUB("github"),
     GITLAB("gitlab"),
     CODECOMMIT("codecommit"),
+    BITBUCKET("bitbucket"),
     /** Fallback for raw values this client does not know about yet. */
     UNKNOWN("__unknown__");
 
