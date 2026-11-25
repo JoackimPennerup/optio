@@ -47,7 +47,7 @@ describe("featuresFromEnv", () => {
       [f.runtimes, f.gitPlatforms, f.triggers, f.ticketSources, f.connectionProviders].map(
         (l) => l.length,
       ),
-    ).toEqual([9, 3, 15, 5, 13]);
+    ).toEqual([9, 4, 15, 5, 13]);
   });
 
   it("narrows each list to what its env var names, in Optio's order", () => {
