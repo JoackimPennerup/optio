@@ -41,7 +41,7 @@ describe("featuresFromEnv", () => {
     expect([...ALL_RUNTIMES].sort()).toEqual([...AGENT_TYPES].sort());
     expect([...ALL_TRIGGERS].sort()).toEqual([...TRIGGER_TYPES].sort());
     expect([...ALL_TICKET_SOURCES].sort()).toEqual(Object.values(TicketSource).sort());
-    expect(ALL_GIT_PLATFORMS).toEqual(["github", "gitlab", "bitbucket", "codecommit"]);
+    expect(ALL_GIT_PLATFORMS).toEqual(["github", "gitlab", "codecommit", "bitbucket"]);
     const f = featuresFromEnv({});
     expect(
       [f.runtimes, f.gitPlatforms, f.triggers, f.ticketSources, f.connectionProviders].map(
