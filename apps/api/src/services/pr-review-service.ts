@@ -607,6 +607,7 @@ export async function enqueueReviewRun(
       resolveRepoPlatform(review.repoUrl, repoConfig.gitPlatform) ?? undefined,
     );
     const isGitLab = parsedRepoUrl?.platform === "gitlab";
+    const isBitbucket = parsedRepoUrl?.platform === "bitbucket";
     const isCodeCommit = parsedRepoUrl?.platform === "codecommit";
 
     renderedPrompt = renderPromptTemplate(template, {
@@ -617,6 +618,7 @@ export async function enqueueReviewRun(
       TEST_COMMAND: repoConfig.testCommand ?? "",
       OUTPUT_PATH: PR_REVIEW_OUTPUT_PATH,
       GIT_PLATFORM_GITLAB: isGitLab ? "true" : "",
+      GIT_PLATFORM_BITBUCKET: isBitbucket ? "true" : "",
       GIT_PLATFORM_CODECOMMIT: isCodeCommit ? "true" : "",
       CODECOMMIT_REPO: isCodeCommit ? (parsedRepoUrl?.repo ?? "") : "",
       BASE_BRANCH: repoConfig.defaultBranch ?? "main",

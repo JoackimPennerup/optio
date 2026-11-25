@@ -3,6 +3,11 @@ import {
   GITLAB_PR_REVIEW_PROMPT_TEMPLATE,
   GITLAB_REVIEW_PROMPT_TEMPLATE,
 } from "./prompt-template-gitlab.js";
+import {
+  BITBUCKET_PROMPT_TEMPLATE,
+  BITBUCKET_REVIEW_PROMPT_TEMPLATE,
+  BITBUCKET_PR_REVIEW_PROMPT_TEMPLATE,
+} from "./prompt-template-bitbucket.js";
 
 export const DEFAULT_PROMPT_TEMPLATE = `{{#if PLANNING_MODE}}## PLANNING MODE
 
@@ -313,6 +318,13 @@ export function builtinPromptTemplates(platform?: string | null): {
   review: string;
   prReview: string;
 } {
+  if (platform === "bitbucket") {
+    return {
+      task: BITBUCKET_PROMPT_TEMPLATE,
+      review: BITBUCKET_REVIEW_PROMPT_TEMPLATE,
+      prReview: BITBUCKET_PR_REVIEW_PROMPT_TEMPLATE,
+    };
+  }
   if (platform === "gitlab") {
     return {
       task: GITLAB_PROMPT_TEMPLATE,

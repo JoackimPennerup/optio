@@ -22,11 +22,14 @@ const SEARCH_DEBOUNCE_MS = 300;
 export function GitLabRepoBrowser({
   selected,
   onPick,
+  platform = "gitlab",
 }: {
   /** `group/project` of the project currently chosen, to mark it. */
   selected: string | null;
   onPick: (repo: BrowsedProject) => void;
+  platform?: "gitlab" | "bitbucket";
 }) {
+  const label = platform === "gitlab" ? "GitLab" : "Bitbucket Data Center";
   const [query, setQuery] = useState("");
   const [repos, setRepos] = useState<BrowsedProject[]>([]);
   const [host, setHost] = useState<string | null>(null);
@@ -44,7 +47,7 @@ export function GitLabRepoBrowser({
     try {
       const res = await api.browseRepos({
         q: q.trim() || undefined,
-        platform: "gitlab",
+        platform,
         host: onHost ?? undefined,
       });
       if (id !== requestId.current) return;
@@ -54,7 +57,7 @@ export function GitLabRepoBrowser({
       setError(res.error ?? "");
     } catch {
       if (id !== requestId.current) return;
-      setError("Could not list GitLab projects");
+      setError(`Could not list ${label} repositories`);
       setRepos([]);
     } finally {
       if (id === requestId.current) setLoading(false);
@@ -76,7 +79,7 @@ export function GitLabRepoBrowser({
     <div className="space-y-2">
       {hosts.length > 1 && (
         <Segmented
-          aria-label="GitLab server"
+          aria-label={`${label} server`}
           wrap
           value={chosenHost ?? host ?? hosts[0]}
           onChange={pickHost}
@@ -91,9 +94,9 @@ export function GitLabRepoBrowser({
           placeholder={
             hosts.length > 1 && host
               ? `Search projects on ${host}…`
-              : "Search your GitLab projects…"
+              : `Search your ${label} repositories…`
           }
-          aria-label="Search GitLab projects"
+          aria-label={`Search ${label} repositories`}
           className={inputClass({ className: "pl-9" })}
           autoFocus
         />
@@ -102,7 +105,7 @@ export function GitLabRepoBrowser({
       <div
         className="max-h-64 overflow-y-auto rounded-lg border border-border divide-y divide-border/60"
         role="listbox"
-        aria-label="GitLab projects"
+        aria-label={`${label} repositories`}
       >
         {repos.map((r) => {
           const isSelected = selected === r.fullName;

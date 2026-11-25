@@ -399,7 +399,12 @@ function describeError(err: unknown): string {
 /** What the agent is asked to do, for a PR it already owns or a fresh one. */
 function prAgentInstructions(facts: PrFacts, action: PrAgentAction): string {
   const base = facts.baseBranch ?? "the base branch";
-  const cli = facts.platform === "gitlab" ? "glab" : "gh";
+  const cli =
+    facts.platform === "gitlab"
+      ? "glab"
+      : facts.platform === "bitbucket"
+        ? "Bitbucket REST API"
+        : "gh";
   switch (action) {
     case "fix_ci":
       return [

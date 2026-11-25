@@ -17,6 +17,7 @@ git config --global user.email "${GIT_BOT_EMAIL:-${GITHUB_APP_BOT_EMAIL:-optio-a
 OPTIO_GIT_HOST=""
 case "${OPTIO_REPO_URL}" in
   *git-codecommit.*.amazonaws.com*) OPTIO_GIT_HOST="codecommit" ;;
+  */scm/*) OPTIO_GIT_HOST="bitbucket" ;;
   *gitlab*) OPTIO_GIT_HOST="gitlab" ;;
   *github*) OPTIO_GIT_HOST="github" ;;
   *)        OPTIO_GIT_HOST="github" ;; # default
@@ -77,7 +78,7 @@ elif [ "${OPTIO_GIT_HOST}" = "codecommit" ] && command -v aws >/dev/null 2>&1; t
   fi
   echo "[optio] CodeCommit credential helper configured (region: ${AWS_DEFAULT_REGION:-${AWS_REGION:-unset}})"
 
-elif [ -n "${GITHUB_TOKEN:-}" ] || [ -n "${GITLAB_TOKEN:-}" ]; then
+elif [ -n "${GITHUB_TOKEN:-}" ] || [ -n "${GITLAB_TOKEN:-}" ] || [ -n "${BITBUCKET_TOKEN:-}" ]; then
   # Static PAT fallback — configure credentials for the detected platform
   git config --global credential.helper store
   : > ~/.git-credentials
@@ -103,6 +104,11 @@ elif [ -n "${GITHUB_TOKEN:-}" ] || [ -n "${GITLAB_TOKEN:-}" ]; then
       glab auth login --hostname "${GITLAB_HOST}" --token "${GITLAB_TOKEN}" 2>/dev/null || true
     fi
     echo "[optio] GitLab credentials configured (host: ${GITLAB_HOST})"
+  fi
+
+  if [ -n "${BITBUCKET_TOKEN:-}" ] && [ -n "${BITBUCKET_HOST:-}" ]; then
+    echo "https://x-token-auth:${BITBUCKET_TOKEN}@${BITBUCKET_HOST}" >> ~/.git-credentials
+    echo "[optio] Bitbucket credentials configured (host: ${BITBUCKET_HOST})"
   fi
 
   echo "[optio] Git credentials configured (static token)"

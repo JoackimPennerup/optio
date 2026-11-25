@@ -40,6 +40,7 @@ export const ALL_GIT_PLATFORMS = [
   "github",
   "gitlab",
   "codecommit",
+  "bitbucket",
 ] as const satisfies readonly GitPlatformType[];
 
 export const ALL_TRIGGERS = [
