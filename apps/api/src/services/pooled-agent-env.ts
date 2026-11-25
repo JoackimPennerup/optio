@@ -134,6 +134,7 @@ export async function pooledProviderSecrets(
 ): Promise<Record<string, string>> {
   if (agent.agentRuntime === "pi") return piProviderSecrets(secret, credential);
   if (agent.agentRuntime === "kilo") {
+    if (credential?.env.KILO_API_KEY) return {};
     const key = await secret("KILO_API_KEY");
     const baseUrl = agent.agentOptions?.opencodeBaseUrl;
     if (!key && !(typeof baseUrl === "string" && baseUrl)) {

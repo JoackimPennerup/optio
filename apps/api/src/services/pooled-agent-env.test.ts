@@ -47,6 +47,26 @@ describe("pooledProviderSecrets", () => {
     ).rejects.toThrow(/ANTHROPIC_API_KEY, OPENAI_API_KEY or GROQ_API_KEY/);
   });
 
+  it("Kilo: accepts a Gateway key or a custom endpoint", async () => {
+    const kilo = { agentRuntime: "kilo", agentOptions: null };
+    expect(
+      await pooledProviderSecrets(
+        getAdapter("kilo"),
+        kilo,
+        stored({ KILO_API_KEY: "key" }),
+        async () => ({}),
+      ),
+    ).toEqual({ KILO_API_KEY: "key" });
+    expect(
+      await pooledProviderSecrets(
+        getAdapter("kilo"),
+        { ...kilo, agentOptions: { opencodeBaseUrl: "https://models.example/v1" } },
+        stored({}),
+        async () => ({}),
+      ),
+    ).toEqual({});
+  });
+
   it("other adapters resolve every name they report missing", async () => {
     const adapter = getAdapter("claude-code");
     const missing = adapter.validateSecrets([]).missing;
@@ -65,6 +85,17 @@ describe("pooledProviderSecrets", () => {
 });
 
 describe("pooledProviderSecrets with a picked credential", () => {
+  it("uses a picked Kilo credential without requiring a deployment secret", async () => {
+    expect(
+      await pooledProviderSecrets(
+        getAdapter("kilo"),
+        { agentRuntime: "kilo", agentOptions: null },
+        stored({}),
+        async () => ({}),
+        { env: { KILO_API_KEY: "picked" } },
+      ),
+    ).toEqual({});
+  });
   it("does not require the secret the credential provides", async () => {
     const resolve = vi.fn(async (names: string[]) =>
       Object.fromEntries(names.map((n) => [n, "v"])),
