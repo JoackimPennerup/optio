@@ -684,6 +684,7 @@ const SKILL_AGENT_TYPES = [
   { value: "copilot", label: "GitHub Copilot" },
   { value: "gemini", label: "Google Gemini" },
   { value: "opencode", label: "OpenCode" },
+  { value: "kilo", label: "Kilo CLI" },
   { value: "cursor", label: "Cursor" },
 ];
 
@@ -1424,7 +1425,7 @@ function OptioAgentSettings() {
       <AgentChoice
         aria-label="Assistant harness"
         runtime={runtime}
-        runtimes={["claude-code", "codex", "copilot", "gemini", "opencode", "cursor"].map(
+        runtimes={["claude-code", "codex", "copilot", "gemini", "opencode", "kilo", "cursor"].map(
           (value) => ({ value }),
         )}
         agentOptions={{

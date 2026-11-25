@@ -2,6 +2,22 @@ import { describe, expect, it } from "vitest";
 import { buildPooledAgentCommand } from "./pooled-agent-command.js";
 
 const opts = { maxTurns: 10, label: "job" };
+
+it("runs Kilo headlessly with its own config and a closed stdin", () => {
+  const lines = buildPooledAgentCommand(
+    "kilo",
+    {
+      OPTIO_PROMPT: "hi",
+      OPTIO_OPENCODE_MODEL: "kilocode/auto",
+      OPTIO_OPENCODE_AGENT: "build",
+    },
+    opts,
+  ).join("\n");
+  expect(lines).toContain('export KILO_CONFIG="$OPTIO_OPENCODE_CONFIG"');
+  expect(lines).toContain(
+    "kilo run --format json --auto --model 'kilocode/auto' --agent 'build' \"$OPTIO_PROMPT\" </dev/null",
+  );
+});
 const runLine = (env: Record<string, string>) =>
   buildPooledAgentCommand("opencode", env, opts).find((l) => l.includes("opencode run"));
 

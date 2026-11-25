@@ -30,6 +30,7 @@ export const ALL_RUNTIMES = [
   "codex",
   "copilot",
   "opencode",
+  "kilo",
   "gemini",
   "openclaw",
   "cursor",

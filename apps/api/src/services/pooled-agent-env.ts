@@ -83,7 +83,10 @@ export async function pooledAgentEnv(
 
   // OpenCode's custom endpoint: what the adapter puts in a Repo Task's env,
   // for the pooled command that reads the same variables.
-  if (agent.agentRuntime === "opencode" && env.OPTIO_OPENCODE_BASE_URL) {
+  if (
+    (agent.agentRuntime === "opencode" || agent.agentRuntime === "kilo") &&
+    env.OPTIO_OPENCODE_BASE_URL
+  ) {
     env.OPENAI_BASE_URL = env.OPTIO_OPENCODE_BASE_URL;
     env.OPENAI_API_KEY ||= OPENCODE_PLACEHOLDER_KEY;
   }
@@ -130,6 +133,15 @@ export async function pooledProviderSecrets(
   credential: CredentialRuntime | null = null,
 ): Promise<Record<string, string>> {
   if (agent.agentRuntime === "pi") return piProviderSecrets(secret, credential);
+  if (agent.agentRuntime === "kilo") {
+    if (credential?.env.KILO_API_KEY) return {};
+    const key = await secret("KILO_API_KEY");
+    const baseUrl = agent.agentOptions?.opencodeBaseUrl;
+    if (!key && !(typeof baseUrl === "string" && baseUrl)) {
+      throw new Error("Kilo CLI needs a KILO_API_KEY secret or a custom base URL");
+    }
+    return key ? { KILO_API_KEY: key } : {};
+  }
   if (agent.agentRuntime !== "opencode") {
     // A picked credential supplies its own secret (and, for Codex, an
     // app-server makes the key unnecessary): don't require what it provides.

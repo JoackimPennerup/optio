@@ -52,6 +52,7 @@ import {
   OPTIO_OPENCODE_CONFIG,
   OPTIO_RUN_HOME,
   opencodeConfigJson,
+  kiloConfigJson,
   runHome,
 } from "../utils/harness-config.js";
 
@@ -539,6 +540,12 @@ function harnessMcpFiles(
     case "opencode": {
       setupFiles.push(own(`${home.setupDir}/opencode/opencode.json`, opencodeConfigJson(mcp)));
       env[OPTIO_OPENCODE_CONFIG] = `${home.podDir}/opencode/opencode.json`;
+      env[OPTIO_RUN_HOME] = home.podDir;
+      break;
+    }
+    case "kilo": {
+      setupFiles.push(own(`${home.setupDir}/kilo/kilo.json`, kiloConfigJson(mcp)));
+      env[OPTIO_OPENCODE_CONFIG] = `${home.podDir}/kilo/kilo.json`;
       env[OPTIO_RUN_HOME] = home.podDir;
       break;
     }

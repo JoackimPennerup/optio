@@ -61,7 +61,8 @@ export function agentOptionsEnv(
       if (effort) env.OPTIO_CODEX_EFFORT = effort;
       break;
     }
-    case "opencode": {
+    case "opencode":
+    case "kilo": {
       if (model) env.OPTIO_OPENCODE_MODEL = model;
       const agent = str("opencodeAgent");
       if (agent) env.OPTIO_OPENCODE_AGENT = agent;

@@ -146,6 +146,7 @@ const LOCAL_AGENT_LABELS: Record<LocalAgentKind, string> = {
   cursor: "Cursor",
   gemini: "Gemini",
   opencode: "OpenCode",
+  kilo: "Kilo CLI",
 };
 
 /**

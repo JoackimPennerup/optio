@@ -41,8 +41,8 @@ export const OPENCODE_PROVIDER_KEYS = [
 export const OPENCODE_PLACEHOLDER_KEY = "sk-no-key-required";
 
 export class OpenCodeAdapter implements AgentAdapter {
-  readonly type = "opencode";
-  readonly displayName = "OpenCode";
+  readonly type: string = "opencode";
+  readonly displayName: string = "OpenCode";
 
   validateSecrets(availableSecrets: string[]): { valid: boolean; missing: string[] } {
     // OpenCode is provider-agnostic — it needs at least one provider API key.

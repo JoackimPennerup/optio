@@ -189,7 +189,7 @@ const get_agent_options: OptioToolSchema = {
     properties: {
       provider: {
         type: "string",
-        enum: ["anthropic", "openai", "gemini", "copilot", "opencode", "cursor", "pi"],
+        enum: ["anthropic", "openai", "gemini", "copilot", "opencode", "kilo", "cursor", "pi"],
       },
       hostId: { type: "string" },
     },

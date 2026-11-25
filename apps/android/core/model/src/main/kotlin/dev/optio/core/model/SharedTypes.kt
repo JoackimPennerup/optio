@@ -2118,6 +2118,7 @@ enum class LocalAgentKind(override val raw: String) : RawEnum {
     CURSOR("cursor"),
     GEMINI("gemini"),
     OPENCODE("opencode"),
+    KILO("kilo"),
     /** Fallback for raw values this client does not know about yet. */
     UNKNOWN("__unknown__");
 

@@ -4295,10 +4295,11 @@ public enum LocalAgentKind: String, Codable, Hashable, Sendable, CaseIterable {
     case cursor = "cursor"
     case gemini = "gemini"
     case opencode = "opencode"
+    case kilo = "kilo"
     /// Fallback for raw values this client does not know about yet.
     case unknown = "__unknown__"
 
-    public static let allCases: [LocalAgentKind] = [.claudeCode, .codex, .cursor, .gemini, .opencode]
+    public static let allCases: [LocalAgentKind] = [.claudeCode, .codex, .cursor, .gemini, .opencode, .kilo]
 
     public init(from decoder: any Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)

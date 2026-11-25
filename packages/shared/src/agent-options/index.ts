@@ -3,6 +3,7 @@ import { OPENAI_CATALOG } from "./openai.js";
 import { GEMINI_CATALOG } from "./gemini.js";
 import { COPILOT_CATALOG } from "./copilot.js";
 import { OPENCODE_CATALOG } from "./opencode.js";
+import { KILO_CATALOG } from "./kilo.js";
 import { OPENCLAW_CATALOG } from "./openclaw.js";
 import { PI_CATALOG } from "./pi.js";
 import { CURSOR_CATALOG } from "./cursor.js";
@@ -29,6 +30,7 @@ export { OPENAI_CATALOG } from "./openai.js";
 export { GEMINI_CATALOG } from "./gemini.js";
 export { COPILOT_CATALOG } from "./copilot.js";
 export { OPENCODE_CATALOG } from "./opencode.js";
+export { KILO_CATALOG } from "./kilo.js";
 export { OPENCLAW_CATALOG } from "./openclaw.js";
 export { PI_CATALOG } from "./pi.js";
 export { CURSOR_CATALOG } from "./cursor.js";
@@ -40,6 +42,7 @@ export const PROVIDER_CATALOGS: Record<AgentProviderId, ProviderCatalog> = {
   gemini: GEMINI_CATALOG,
   copilot: COPILOT_CATALOG,
   opencode: OPENCODE_CATALOG,
+  kilo: KILO_CATALOG,
   openclaw: OPENCLAW_CATALOG,
   cursor: CURSOR_CATALOG,
   pi: PI_CATALOG,
@@ -51,6 +54,7 @@ export const ALL_PROVIDER_IDS: readonly AgentProviderId[] = [
   "gemini",
   "copilot",
   "opencode",
+  "kilo",
   "openclaw",
   "cursor",
   "pi",
@@ -62,13 +66,22 @@ export const ALL_PROVIDER_IDS: readonly AgentProviderId[] = [
  * `providerForAgentType()`.
  */
 export type AgentType =
-  "claude-code" | "codex" | "copilot" | "opencode" | "gemini" | "openclaw" | "cursor" | "pi";
+  | "claude-code"
+  | "codex"
+  | "copilot"
+  | "opencode"
+  | "kilo"
+  | "gemini"
+  | "openclaw"
+  | "cursor"
+  | "pi";
 
 export const AGENT_TYPES: readonly AgentType[] = [
   "claude-code",
   "codex",
   "copilot",
   "opencode",
+  "kilo",
   "gemini",
   "openclaw",
   "cursor",
@@ -91,6 +104,8 @@ export function providerForAgentType(agentType: AgentType | string): AgentProvid
       return "copilot";
     case "opencode":
       return "opencode";
+    case "kilo":
+      return "kilo";
     case "openclaw":
       return "openclaw";
     case "pi":

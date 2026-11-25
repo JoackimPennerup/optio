@@ -221,7 +221,7 @@ export type LocalTerminalSpec =
     };
 
 /** Agent CLIs the daemon knows how to launch (and, for claude-code, hook). */
-export type LocalAgentKind = "claude-code" | "codex" | "cursor" | "gemini" | "opencode";
+export type LocalAgentKind = "claude-code" | "codex" | "cursor" | "gemini" | "opencode" | "kilo";
 
 export const LOCAL_AGENT_KINDS: readonly LocalAgentKind[] = [
   "claude-code",
@@ -229,6 +229,7 @@ export const LOCAL_AGENT_KINDS: readonly LocalAgentKind[] = [
   "cursor",
   "gemini",
   "opencode",
+  "kilo",
 ];
 
 /**

@@ -3,6 +3,7 @@ export { ClaudeCodeAdapter } from "./claude-code.js";
 export { CodexAdapter } from "./codex.js";
 export { CopilotAdapter } from "./copilot.js";
 export { OpenCodeAdapter, OPENCODE_PLACEHOLDER_KEY, OPENCODE_PROVIDER_KEYS } from "./opencode.js";
+export { KiloAdapter } from "./kilo.js";
 export {
   OPENCODE_AUTO_APPROVE_FLAG,
   OPENCODE_GLOBAL_AGENTS_MD,
@@ -20,6 +21,7 @@ import { ClaudeCodeAdapter } from "./claude-code.js";
 import { CodexAdapter } from "./codex.js";
 import { CopilotAdapter } from "./copilot.js";
 import { OpenCodeAdapter } from "./opencode.js";
+import { KiloAdapter } from "./kilo.js";
 import { GeminiAdapter } from "./gemini.js";
 import { OpenClawAdapter } from "./openclaw.js";
 import { PiAdapter } from "./pi.js";
@@ -31,6 +33,7 @@ const adapters: Record<string, AgentAdapter> = {
   copilot: new CopilotAdapter(),
   gemini: new GeminiAdapter(),
   opencode: new OpenCodeAdapter(),
+  kilo: new KiloAdapter(),
   cursor: new CursorAdapter(),
   pi: new PiAdapter(),
 };
