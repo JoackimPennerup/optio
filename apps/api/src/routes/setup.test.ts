@@ -97,6 +97,17 @@ describe("GET /api/setup/status", () => {
     expect(body.steps.anthropicKey.done).toBe(true);
   });
 
+  it("counts a Bitbucket token as completing the git provider step", async () => {
+    mockListSecrets.mockResolvedValue([
+      { name: "ANTHROPIC_API_KEY" },
+      { name: "BITBUCKET_TOKEN_BITBUCKET_EXAMPLE_COM" },
+    ]);
+    mockRetrieveSecret.mockRejectedValue(new Error("not found"));
+    mockCheckRuntimeHealth.mockResolvedValue(true);
+    const res = await app.inject({ method: "GET", url: "/api/setup/status" });
+    expect(res.json().steps.gitToken.done).toBe(true);
+  });
+
   it("returns not set up when no agent key exists", async () => {
     mockListSecrets.mockResolvedValue([{ name: "GITHUB_TOKEN" }]);
     mockRetrieveSecret.mockRejectedValue(new Error("not found"));
@@ -435,6 +446,74 @@ describe("POST /api/setup/validate/repo", () => {
     const headers = new Headers(fetchMock.mock.calls[0][1]?.headers);
     expect(headers.get("authorization")).toBe("Bearer gloas-oauth");
     expect(headers.get("private-token")).toBeNull();
+  });
+});
+
+describe("Bitbucket Server / Data Center setup", () => {
+  let app: FastifyInstance;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    vi.stubEnv("BITBUCKET_HOSTS", "bitbucket.example.com");
+    app = await buildTestApp();
+  });
+
+  afterEach(async () => {
+    await app.close();
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+
+  it("does not send a token to an unlisted host", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/setup/validate/bitbucket-token",
+      payload: { token: "secret", host: "other.example.com" },
+    });
+    expect(res.json()).toMatchObject({ valid: false });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("validates the token against a listed Bitbucket host", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ values: [] }) });
+    vi.stubGlobal("fetch", fetchMock);
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/setup/validate/bitbucket-token",
+      payload: { token: "secret", host: "bitbucket.example.com" },
+    });
+    expect(res.json()).toMatchObject({ valid: true });
+    expect(fetchMock.mock.calls[0][0].toString()).toContain("/rest/api/latest/projects?limit=1");
+    expect(new Headers(fetchMock.mock.calls[0][1].headers).get("authorization")).toBe(
+      "Bearer secret",
+    );
+  });
+
+  it("suggests accessible repositories with their default branches", async () => {
+    const fetchMock = vi.fn().mockImplementation(async (url: URL | string) => {
+      const path = url.toString();
+      if (path.endsWith("/projects?limit=20"))
+        return { ok: true, json: async () => ({ values: [{ key: "PROJ" }] }) };
+      if (path.includes("/repos?limit=8"))
+        return { ok: true, json: async () => ({ values: [{ slug: "service", public: false }] }) };
+      return { ok: true, json: async () => ({ displayId: "develop" }) };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/setup/repos/bitbucket",
+      payload: { token: "secret", host: "bitbucket.example.com" },
+    });
+    expect(res.json().repos).toMatchObject([
+      {
+        fullName: "PROJ/service",
+        defaultBranch: "develop",
+        isPrivate: true,
+        cloneUrl: "https://bitbucket.example.com/scm/PROJ/service.git",
+      },
+    ]);
   });
 });
 

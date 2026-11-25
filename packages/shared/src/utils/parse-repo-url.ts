@@ -23,6 +23,19 @@ function getGitLabHosts(): Set<string> {
   return hosts;
 }
 
+function getBitbucketHosts(): Set<string> {
+  const env =
+    typeof process !== "undefined"
+      ? (process.env.BITBUCKET_HOSTS ?? process.env.OPTIO_BITBUCKET_HOSTS)
+      : undefined;
+  return new Set(
+    (env ?? "")
+      .split(",")
+      .map((host) => host.trim().toLowerCase())
+      .filter(Boolean),
+  );
+}
+
 // CodeCommit Git endpoint: git-codecommit.<region>.amazonaws.com
 // Console PR URL: <region>.console.aws.amazon.com/codesuite/codecommit/repositories/<repo>/pull-requests/<id>
 const CODECOMMIT_GIT_HOST_RE = /^git-codecommit\.([a-z0-9-]+)\.amazonaws\.com$/i;
@@ -51,6 +64,8 @@ export function knownHostPlatform(host: string): GitPlatformType | null {
   if (GITHUB_HOSTS.has(hostname)) return "github";
   const gitlabHosts = getGitLabHosts();
   if (gitlabHosts.has(h) || gitlabHosts.has(hostname)) return "gitlab";
+  const bitbucketHosts = getBitbucketHosts();
+  if (bitbucketHosts.has(h) || bitbucketHosts.has(hostname)) return "bitbucket";
   if (extractCodeCommitRegion(hostname)) return "codecommit";
   return null;
 }
@@ -76,6 +91,7 @@ function buildApiBaseUrl(platform: GitPlatformType, host: string): string {
     // We store the region here so callers can configure the SDK client.
     return extractCodeCommitRegion(host) ?? "us-east-1";
   }
+  if (platform === "bitbucket") return `https://${host}/rest/api/latest`;
   return `https://${host}/api/v4`;
 }
 
@@ -146,6 +162,13 @@ function cleanOwnerRepo(
     return null;
   }
 
+  if (platform === "bitbucket") {
+    const clone = p.match(/^scm\/([^/]+)\/([^/]+)$/i);
+    if (clone) return { owner: clone[1], repo: clone[2] };
+    const web = p.match(/^projects\/([^/]+)\/repos\/([^/]+)/i);
+    if (web) return { owner: web[1], repo: web[2] };
+  }
+
   const parts = p.split("/").filter(Boolean);
   if (parts.length < 2) return null;
 
@@ -168,7 +191,9 @@ export function parseRepoUrl(url: string, platform?: GitPlatformType): RepoIdent
   if (!extracted) return null;
 
   const host = extracted.host.toLowerCase();
-  platform ??= detectPlatform(host);
+  platform ??= /^(?:scm|projects)\/[^/]+\/(?:repos\/)?[^/]+/i.test(extracted.path)
+    ? "bitbucket"
+    : detectPlatform(host);
 
   const ownerRepo = cleanOwnerRepo(extracted.path, platform, host);
   if (!ownerRepo) return null;
@@ -195,8 +220,14 @@ export function resolveRepoPlatform(
   const extracted = extractParts(repoUrl);
   const known = extracted ? knownHostPlatform(extracted.host) : null;
   if (known) return known;
-  if (recorded === "github" || recorded === "gitlab" || recorded === "codecommit") return recorded;
-  return extracted ? detectPlatform(extracted.host.toLowerCase()) : null;
+  if (
+    recorded === "github" ||
+    recorded === "gitlab" ||
+    recorded === "codecommit" ||
+    recorded === "bitbucket"
+  )
+    return recorded;
+  return extracted ? (parseRepoUrl(repoUrl)?.platform ?? null) : null;
 }
 
 /**
@@ -212,6 +243,18 @@ export function parsePrUrl(url: string): (RepoIdentifier & { prNumber: number })
   const platform = detectPlatform(host);
 
   const p = extracted.path.replace(/\.git\/?$/, "").replace(/\/+$/, "");
+
+  const bbMatch = p.match(/^projects\/([^/]+)\/repos\/([^/]+)\/pull-requests\/(\d+)/i);
+  if (bbMatch && (platform === "bitbucket" || !knownHostPlatform(host))) {
+    return {
+      platform: "bitbucket",
+      host,
+      owner: bbMatch[1],
+      repo: bbMatch[2],
+      apiBaseUrl: buildApiBaseUrl("bitbucket", host),
+      prNumber: Number(bbMatch[3]),
+    };
+  }
 
   // CodeCommit console: codesuite/codecommit/repositories/<repo>/pull-requests/<id>
   if (platform === "codecommit") {

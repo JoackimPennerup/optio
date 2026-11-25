@@ -584,7 +584,11 @@ export const api = {
   },
 
   browseRepos: (
-    params: { q?: string; platform?: "github" | "gitlab" | "codecommit"; host?: string } = {},
+    params: {
+      q?: string;
+      platform?: "github" | "gitlab" | "codecommit" | "bitbucket";
+      host?: string;
+    } = {},
   ) => {
     const qs = new URLSearchParams();
     if (params.q) qs.set("q", params.q);
@@ -601,7 +605,7 @@ export const api = {
         description: string | null;
         pushedAt: string | null;
       }>;
-      platform: "github" | "gitlab" | "codecommit";
+      platform: "github" | "gitlab" | "codecommit" | "bitbucket";
       host: string | null;
       /** Every host of the platform that can be listed, the default first. */
       hosts?: string[];
@@ -614,7 +618,7 @@ export const api = {
     fullName: string;
     defaultBranch?: string;
     isPrivate?: boolean;
-    gitPlatform?: "github" | "gitlab" | "codecommit";
+    gitPlatform?: "github" | "gitlab" | "codecommit" | "bitbucket";
   }) => request<{ repo: any }>("/api/repos", { method: "POST", body: JSON.stringify(data) }),
 
   updateRepo: (id: string, data: Record<string, unknown>) =>
@@ -741,6 +745,30 @@ export const api = {
       body: JSON.stringify({ token, host }),
     }),
 
+  validateBitbucketToken: (token: string, host: string) =>
+    request<{ valid: boolean; error?: string }>("/api/setup/validate/bitbucket-token", {
+      method: "POST",
+      body: JSON.stringify({ token, host }),
+    }),
+
+  listBitbucketRepos: (token: string, host: string) =>
+    request<{
+      repos: Array<{
+        fullName: string;
+        cloneUrl: string;
+        htmlUrl: string;
+        defaultBranch: string;
+        isPrivate: boolean;
+        description: string | null;
+        language: string | null;
+        pushedAt: string;
+      }>;
+      error?: string;
+    }>("/api/setup/repos/bitbucket", {
+      method: "POST",
+      body: JSON.stringify({ token, host }),
+    }),
+
   validateAwsCredentials: (creds: {
     accessKeyId: string;
     secretAccessKey: string;
@@ -799,7 +827,11 @@ export const api = {
       body: JSON.stringify({ key }),
     }),
 
-  validateRepo: (repoUrl: string, token?: string, gitPlatform?: "github" | "gitlab") =>
+  validateRepo: (
+    repoUrl: string,
+    token?: string,
+    gitPlatform?: "github" | "gitlab" | "bitbucket",
+  ) =>
     request<{
       valid: boolean;
       error?: string;

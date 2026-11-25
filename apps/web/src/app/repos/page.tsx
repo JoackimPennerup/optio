@@ -16,6 +16,7 @@ import { ButtonLink } from "@/components/ui/button";
 /** The git host's mark, from the repo URL (GitHub unless it says otherwise). */
 function repoBrand(repo: { repoUrl?: string; gitPlatform?: string | null }): Brand | null {
   if (repo.gitPlatform === "gitlab") return "gitlab";
+  if (repo.gitPlatform === "bitbucket") return "bitbucket";
   if (repo.gitPlatform === "github") return "github";
   if (repo.gitPlatform === "codecommit") return null;
   const url = (repo.repoUrl ?? "").toLowerCase();
@@ -90,7 +91,7 @@ export default function ReposPage() {
         <EmptyState
           icon={FolderGit2}
           title="No repositories configured"
-          description="Add a GitHub, GitLab, or CodeCommit repo to run PR work against it."
+          description="Add a GitHub, GitLab, Bitbucket Server / Data Center, or CodeCommit repo to run PR work against it."
           action={{ label: "Add Repository", href: "/repos/new" }}
         />
       ) : (

@@ -111,7 +111,9 @@ export class CodexAdapter implements AgentAdapter {
 
   createResultParser(): AgentResultParser {
     // Extract the PR URL from anywhere in the output (its first mention)
-    const pr = firstMatch(/https:\/\/github\.com\/[^\s"]+\/pull\/\d+/);
+    const pr = firstMatch(
+      /https:\/\/[^\s"]+\/(?:pull\/\d+|pull-requests\/\d+|-\/merge_requests\/\d+)/,
+    );
     const parsed = this.logParser();
     return {
       push(line) {

@@ -7,7 +7,7 @@
  * the web, the mobile apps and the controller MCP all agree on it.
  */
 
-export type PrPlatform = "github" | "gitlab" | "codecommit";
+export type PrPlatform = "github" | "gitlab" | "codecommit" | "bitbucket";
 export type PrChecks = "passing" | "failing" | "pending" | "none";
 /**
  * - `clean`: mergeable as far as the platform can tell

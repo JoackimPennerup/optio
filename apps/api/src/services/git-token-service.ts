@@ -52,6 +52,29 @@ export async function getGitToken(
     return getCodeCommitCredentials(context.workspaceId);
   }
 
+  if (platform === "bitbucket") {
+    const hostName = context.host
+      ? gitLabTokenNameForHost(context.host).replace(/^GITLAB_/, "BITBUCKET_")
+      : null;
+    const names = hostName ? [hostName, "BITBUCKET_TOKEN"] : ["BITBUCKET_TOKEN"];
+    const userId = context.server ? null : (context.userId ?? null);
+    for (const name of names) {
+      if (userId) {
+        const personal = await retrieveSecret(name, "user", undefined, userId).catch(() => null);
+        if (personal) return personal;
+      }
+      const shared = await retrieveSecretWithFallback(name, "global", context.workspaceId).catch(
+        () => null,
+      );
+      if (shared) return shared;
+    }
+    const envToken = (hostName ? process.env[hostName] : undefined) || process.env.BITBUCKET_TOKEN;
+    if (envToken) return envToken;
+    throw new Error(
+      "No Bitbucket Server / Data Center token available. Add a BITBUCKET_TOKEN secret.",
+    );
+  }
+
   // The person's own token, then the workspace's and organization's,
   // then the environment. Prefer the host-specific name at each scope.
   const userId = context.server ? null : (context.userId ?? null);
@@ -91,6 +114,11 @@ function envHosts(...names: string[]): string[] {
     .filter(Boolean);
 }
 
+/** A Bitbucket Server / Data Center destination explicitly configured by the operator. */
+export function isListedBitbucketHost(host: string): boolean {
+  return envHosts("BITBUCKET_HOSTS", "OPTIO_BITBUCKET_HOSTS").includes(host.toLowerCase());
+}
+
 /**
  * Hosts the deployment's git credentials may be sent to without a lookup:
  * github.com, gitlab.com, and the hosts an operator listed (`GITLAB_HOSTS` /
@@ -105,6 +133,8 @@ export function isListedGitHost(host: string): boolean {
     "OPTIO_GITLAB_HOSTS",
     "GITHUB_HOSTS",
     "OPTIO_GITHUB_HOSTS",
+    "BITBUCKET_HOSTS",
+    "OPTIO_BITBUCKET_HOSTS",
   ).includes(h);
 }
 
@@ -123,6 +153,7 @@ export async function isTrustedGitHost(
   ri: Pick<RepoIdentifier, "host" | "platform">,
 ): Promise<boolean> {
   if (ri.platform === "codecommit") return true;
+  if (ri.platform === "bitbucket") return isListedBitbucketHost(ri.host);
   return isListedGitHost(ri.host);
 }
 
@@ -168,13 +199,15 @@ export async function getGitPlatformForRepo(
   if (!(await isTrustedGitHost(ri))) {
     throw new Error(
       `Refusing to send git credentials to ${ri.host}: a deployment operator must list ` +
-        "the host in GITHUB_HOSTS / GITLAB_HOSTS",
+        "the host in GITHUB_HOSTS / GITLAB_HOSTS / BITBUCKET_HOSTS",
     );
   }
 
   const token = await getGitToken(
     ri.platform,
-    ri.platform === "gitlab" ? { ...tokenContext, host: ri.host } : tokenContext,
+    ri.platform === "gitlab" || ri.platform === "bitbucket"
+      ? { ...tokenContext, host: ri.host }
+      : tokenContext,
   );
   const platform = createGitPlatform(ri.platform, token);
 

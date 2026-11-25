@@ -1,5 +1,9 @@
 import { parseRepoUrl as parsePlatformRepoUrl, resolveRepoPlatform } from "@optio/shared";
-import { getGitToken, isTrustedGitHost } from "../services/git-token-service.js";
+import {
+  getGitToken,
+  isListedBitbucketHost,
+  isTrustedGitHost,
+} from "../services/git-token-service.js";
 import { createGitPlatform } from "../services/git-platform/index.js";
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import type { ZodTypeProvider } from "fastify-type-provider-zod";
@@ -25,6 +29,15 @@ const gitlabTokenSchema = z
       .describe("Optional self-hosted GitLab host; defaults to gitlab.com"),
   })
   .describe("GitLab token + optional host");
+const bitbucketTokenSchema = z
+  .object({
+    token: z.string().min(1),
+    host: z
+      .string()
+      .trim()
+      .regex(/^[A-Za-z0-9][A-Za-z0-9.-]*(?::\d{1,5})?$/),
+  })
+  .describe("Bitbucket Server / Data Center access token and configured host");
 const awsCredentialsSchema = z
   .object({
     accessKeyId: z.string().min(1),
@@ -46,7 +59,7 @@ const validateRepoSchema = z
   .object({
     repoUrl: z.string().min(1),
     token: z.string().optional(),
-    gitPlatform: z.enum(["github", "gitlab", "codecommit"]).optional(),
+    gitPlatform: z.enum(["github", "gitlab", "codecommit", "bitbucket"]).optional(),
   })
   .describe("Body for validating access to a specific repo URL");
 
@@ -128,11 +141,15 @@ export async function setupRoutes(rawApp: FastifyInstance) {
       // set of stored secret names avoids that read-after-write asymmetry.
       const hasAnthropicKey = secretNames.includes("ANTHROPIC_API_KEY");
       const hasOpenAIKey = secretNames.includes("OPENAI_API_KEY");
-      // Without GitHub offered (OPTIO_GIT_PLATFORMS) only GITLAB_TOKEN counts.
+      // Only tokens for offered platforms satisfy the git setup step.
       const hasGitToken =
         (featureAllows("gitPlatforms", "github") &&
           (secretNames.includes("GITHUB_TOKEN") || isGitHubAppConfigured())) ||
-        (featureAllows("gitPlatforms", "gitlab") && secretNames.includes("GITLAB_TOKEN"));
+        (featureAllows("gitPlatforms", "gitlab") && secretNames.includes("GITLAB_TOKEN")) ||
+        (featureAllows("gitPlatforms", "bitbucket") &&
+          secretNames.some(
+            (name) => name === "BITBUCKET_TOKEN" || name.startsWith("BITBUCKET_TOKEN_"),
+          ));
 
       const usingSubscription = isSubscriptionAvailable();
       const hasOauthToken = secretNames.includes("CLAUDE_CODE_OAUTH_TOKEN");
@@ -274,6 +291,42 @@ export async function setupRoutes(rawApp: FastifyInstance) {
       } catch (err) {
         app.log.error(err, "GitLab token validation failed");
         reply.send({ valid: false, error: sanitizeError(err) });
+      }
+    },
+  );
+
+  app.post(
+    "/api/setup/validate/bitbucket-token",
+    {
+      config: { rateLimit: SETUP_POST_RATE_LIMIT },
+      preHandler: [requireSetupAdmin],
+      schema: {
+        operationId: "validateBitbucketToken",
+        summary: "Validate a Bitbucket Server / Data Center access token",
+        tags: ["Setup & Settings"],
+        body: bitbucketTokenSchema,
+        response: { 200: ValidationResultSchema, 400: ErrorResponseSchema },
+      },
+    },
+    async (req, reply) => {
+      const { token, host } = req.body;
+      if (!isListedBitbucketHost(host)) {
+        return reply.send({
+          valid: false,
+          error: "Add this host to BITBUCKET_HOSTS before validating its token",
+        });
+      }
+      try {
+        const res = await guardedFetch(`https://${host}/rest/api/latest/projects?limit=1`, {
+          headers: { Authorization: `Bearer ${token}`, "User-Agent": "Optio" },
+          redirect: "error",
+        });
+        return reply.send(
+          res.ok ? { valid: true } : { valid: false, error: `Bitbucket returned ${res.status}` },
+        );
+      } catch (err) {
+        app.log.error(err, "Bitbucket token validation failed");
+        return reply.send({ valid: false, error: sanitizeError(err) });
       }
     },
   );
@@ -672,6 +725,96 @@ export async function setupRoutes(rawApp: FastifyInstance) {
   );
 
   app.post(
+    "/api/setup/repos/bitbucket",
+    {
+      config: { rateLimit: SETUP_POST_RATE_LIMIT },
+      preHandler: [requireSetupAdmin],
+      schema: {
+        operationId: "listSetupBitbucketRepos",
+        summary: "List Bitbucket Server / Data Center repositories for setup",
+        tags: ["Setup & Settings"],
+        body: bitbucketTokenSchema,
+        response: { 200: ReposListResponseSchema, 400: ErrorResponseSchema },
+      },
+    },
+    async (req, reply) => {
+      const { token, host } = req.body;
+      if (!isListedBitbucketHost(host)) {
+        return reply.send({
+          repos: [],
+          error: "Add this host to BITBUCKET_HOSTS before listing repositories",
+        });
+      }
+      const root = `https://${host}/rest/api/latest`;
+      const init = {
+        headers: { Authorization: `Bearer ${token}`, "User-Agent": "Optio" },
+        redirect: "error" as const,
+      };
+      try {
+        const projectsRes = await guardedFetch(`${root}/projects?limit=20`, init);
+        if (!projectsRes.ok)
+          return reply.send({ repos: [], error: `Bitbucket returned ${projectsRes.status}` });
+        const projects = (await projectsRes.json()) as { values?: Array<{ key: string }> };
+        const repos: Array<{
+          fullName: string;
+          cloneUrl: string;
+          htmlUrl: string;
+          defaultBranch: string;
+          isPrivate: boolean;
+          description: string | null;
+          language: null;
+          pushedAt: string;
+        }> = [];
+        for (const project of projects.values ?? []) {
+          if (repos.length >= 8) break;
+          const projectKey = encodeURIComponent(project.key);
+          const listRes = await guardedFetch(
+            `${root}/projects/${projectKey}/repos?limit=${8 - repos.length}`,
+            init,
+          );
+          if (!listRes.ok) continue;
+          const list = (await listRes.json()) as {
+            values?: Array<{
+              slug: string;
+              name?: string;
+              description?: string;
+              public?: boolean;
+              links?: {
+                clone?: Array<{ href: string; name: string }>;
+                self?: Array<{ href: string }>;
+              };
+            }>;
+          };
+          for (const row of list.values ?? []) {
+            if (repos.length >= 8) break;
+            const repoPath = `${root}/projects/${projectKey}/repos/${encodeURIComponent(row.slug)}`;
+            const branchRes = await guardedFetch(`${repoPath}/default-branch`, init);
+            const branch = branchRes.ok ? ((await branchRes.json()) as { displayId?: string }) : {};
+            repos.push({
+              fullName: `${project.key}/${row.slug}`,
+              cloneUrl:
+                row.links?.clone?.find((link) => link.name === "http")?.href ??
+                `https://${host}/scm/${projectKey}/${encodeURIComponent(row.slug)}.git`,
+              htmlUrl:
+                row.links?.self?.[0]?.href ??
+                `https://${host}/projects/${projectKey}/repos/${encodeURIComponent(row.slug)}`,
+              defaultBranch: branch.displayId ?? "main",
+              isPrivate: !row.public,
+              description: row.description ?? null,
+              language: null,
+              pushedAt: "",
+            });
+          }
+        }
+        return reply.send({ repos });
+      } catch (err) {
+        app.log.error(err, "Bitbucket repo listing failed");
+        return reply.send({ repos: [], error: sanitizeError(err) });
+      }
+    },
+  );
+
+  app.post(
     "/api/setup/validate/repo",
     {
       config: { rateLimit: SETUP_POST_RATE_LIMIT },
@@ -700,13 +843,19 @@ export async function setupRoutes(rawApp: FastifyInstance) {
           resolveRepoPlatform(repoUrl, gitPlatform) ?? undefined,
         );
         if (gitPlatform && ri && ri.platform !== "github") {
+          if (ri.platform === "bitbucket" && !isListedBitbucketHost(ri.host)) {
+            return reply.send({
+              valid: false,
+              error: "Add this host to BITBUCKET_HOSTS before validating its repository",
+            });
+          }
           let platformToken = token ?? null;
           if (!platformToken) {
             if (!(await isTrustedGitHost(ri))) {
               return reply.send({
                 valid: false,
                 error:
-                  "A deployment operator must list this host in GITHUB_HOSTS / GITLAB_HOSTS before using stored credentials.",
+                  "A deployment operator must list this host in GITHUB_HOSTS / GITLAB_HOSTS / BITBUCKET_HOSTS before using stored credentials.",
               });
             }
             platformToken = await getGitToken(ri.platform, {

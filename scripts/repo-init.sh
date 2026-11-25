@@ -17,6 +17,7 @@ git config --global user.email "${GIT_BOT_EMAIL:-${GITHUB_APP_BOT_EMAIL:-optio-a
 OPTIO_GIT_HOST=""
 case "${OPTIO_REPO_URL}" in
   *git-codecommit.*.amazonaws.com*) OPTIO_GIT_HOST="codecommit" ;;
+  */scm/*) OPTIO_GIT_HOST="bitbucket" ;;
   *gitlab*) OPTIO_GIT_HOST="gitlab" ;;
   *github*) OPTIO_GIT_HOST="github" ;;
   *)        OPTIO_GIT_HOST="github" ;; # default
@@ -30,6 +31,20 @@ if [ "${OPTIO_GIT_HOST}" = "github" ] && [ -n "${GITLAB_HOSTS:-}" ]; then
   esac
 fi
 echo "[optio] Detected git platform: ${OPTIO_GIT_HOST}"
+
+# Bitbucket Server 8.9 HTTP tokens authenticate Git with a Bearer header.
+# Scope the header to the exact HTTPS host; Git also inherits it for fetches
+# during this init process. Do not write the token into ~/.gitconfig.
+if [ "${OPTIO_GIT_HOST}" = "bitbucket" ] && [ -n "${BITBUCKET_TOKEN:-}" ] && [ -n "${BITBUCKET_HOST:-}" ]; then
+  _repo_host=${OPTIO_REPO_URL#https://}
+  _repo_host=${_repo_host%%/*}
+  if [ "${_repo_host,,}" = "${BITBUCKET_HOST,,}" ]; then
+    export GIT_CONFIG_COUNT=1
+    export GIT_CONFIG_KEY_0="http.https://${BITBUCKET_HOST}/.extraHeader"
+    export GIT_CONFIG_VALUE_0="Authorization: Bearer ${BITBUCKET_TOKEN}"
+    echo "[optio] Bitbucket Bearer authentication configured"
+  fi
+fi
 
 # Set up git credentials for initial clone.
 # Priority: Envoy secret proxy > dynamic credential helper > static PAT fallback.
@@ -77,7 +92,7 @@ elif [ "${OPTIO_GIT_HOST}" = "codecommit" ] && command -v aws >/dev/null 2>&1; t
   fi
   echo "[optio] CodeCommit credential helper configured (region: ${AWS_DEFAULT_REGION:-${AWS_REGION:-unset}})"
 
-elif [ -n "${GITHUB_TOKEN:-}" ] || [ -n "${GITLAB_TOKEN:-}" ]; then
+elif [ -n "${GITHUB_TOKEN:-}" ] || [ -n "${GITLAB_TOKEN:-}" ] || [ -n "${BITBUCKET_TOKEN:-}" ]; then
   # Static PAT fallback — configure credentials for the detected platform
   git config --global credential.helper store
   : > ~/.git-credentials

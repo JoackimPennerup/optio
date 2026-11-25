@@ -79,8 +79,8 @@ export default function NewRepoPage() {
   // Said only when the person chose GitLab (the switch, or a project from its
   // list): otherwise the URL decides, as it always did.
   const chosenPlatform =
-    platform === "gitlab" && (platformChoice === "gitlab" || pickedFrom === "gitlab")
-      ? ("gitlab" as const)
+    platform !== "github" && (platformChoice === platform || pickedFrom === platform)
+      ? platform
       : undefined;
   const [repoUrl, setRepoUrl] = useState("");
   const [fullName, setFullName] = useState("");
@@ -372,10 +372,14 @@ export default function NewRepoPage() {
 /* ── Step 1: Repository URL ─────────────────────────────────── */
 
 /** The platforms whose repositories the page can list. */
-const BROWSABLE_PLATFORMS = ["github", "gitlab"] as const;
+const BROWSABLE_PLATFORMS = ["github", "gitlab", "bitbucket"] as const;
 type BrowsablePlatform = (typeof BROWSABLE_PLATFORMS)[number];
 
-const PLATFORM_LABELS: Record<BrowsablePlatform, string> = { github: "GitHub", gitlab: "GitLab" };
+const PLATFORM_LABELS: Record<BrowsablePlatform, string> = {
+  github: "GitHub",
+  gitlab: "GitLab",
+  bitbucket: "Bitbucket Server / Data Center",
+};
 
 /** Secrets that say a GitLab is set up (a token at any scope, the wizard's host). */
 const GITLAB_SETUP_SECRETS = ["GITLAB_TOKEN", "GITLAB_USER_ACCESS_TOKEN", "GITLAB_HOST"];
@@ -440,7 +444,7 @@ function RepoStep({
         </p>
       ) : (
         <p className="text-xs text-text-muted">
-          Pick one of the GitLab projects your GitLab token can access, or paste a project URL.
+          Pick a repository your {PLATFORM_LABELS[platform]} token can access, or paste its URL.
           Optio will fetch the project metadata automatically.
         </p>
       )}
@@ -448,7 +452,11 @@ function RepoStep({
       {github ? (
         <GitHubRepoBrowser selected={validated ? fullName : null} onPick={onPick} />
       ) : (
-        <GitLabRepoBrowser selected={validated ? fullName : null} onPick={onPick} />
+        <GitLabRepoBrowser
+          platform={platform}
+          selected={validated ? fullName : null}
+          onPick={onPick}
+        />
       )}
 
       <div className="flex gap-2">
@@ -457,7 +465,11 @@ function RepoStep({
           onChange={(e) => setRepoUrl(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && onValidate()}
           placeholder={
-            github ? "https://github.com/owner/repo" : "https://gitlab.example.com/group/project"
+            github
+              ? "https://github.com/owner/repo"
+              : platform === "gitlab"
+                ? "https://gitlab.example.com/group/project"
+                : "https://bitbucket.example.com/scm/PROJECT/repo.git"
           }
           className={cn(inputClass, "flex-1")}
           aria-label="Repository URL"

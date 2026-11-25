@@ -1,4 +1,4 @@
-export type GitPlatformType = "github" | "gitlab" | "codecommit";
+export type GitPlatformType = "github" | "gitlab" | "codecommit" | "bitbucket";
 
 export interface RepoIdentifier {
   platform: GitPlatformType;

@@ -44,9 +44,22 @@ describe("renderTemplateString {{else}}", () => {
 describe("platformTemplateParams", () => {
   it("names the repo's platform for a template that asks for it", () => {
     const t = "{{#if GIT_PLATFORM_GITLAB}}glab{{else}}gh{{/if}}";
-    expect(platformTemplateParams(t, "gitlab")).toEqual({ GIT_PLATFORM_GITLAB: "true" });
-    expect(platformTemplateParams(t, "github")).toEqual({ GIT_PLATFORM_GITLAB: "" });
-    expect(platformTemplateParams(t, null)).toEqual({ GIT_PLATFORM_GITLAB: "" });
+    expect(platformTemplateParams(t, "gitlab")).toEqual({
+      GIT_PLATFORM_GITLAB: "true",
+      GIT_PLATFORM_BITBUCKET: "",
+    });
+    expect(platformTemplateParams(t, "github")).toEqual({
+      GIT_PLATFORM_GITLAB: "",
+      GIT_PLATFORM_BITBUCKET: "",
+    });
+    expect(platformTemplateParams(t, null)).toEqual({
+      GIT_PLATFORM_GITLAB: "",
+      GIT_PLATFORM_BITBUCKET: "",
+    });
+    expect(platformTemplateParams(t, "bitbucket")).toEqual({
+      GIT_PLATFORM_GITLAB: "",
+      GIT_PLATFORM_BITBUCKET: "true",
+    });
   });
 
   it("adds nothing to a template that doesn't", () => {

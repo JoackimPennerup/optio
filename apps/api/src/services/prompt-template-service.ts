@@ -406,7 +406,10 @@ export function platformTemplateParams(
   platform: string | null | undefined,
 ): Record<string, string> {
   if (!templateUsesPlatform(template)) return {};
-  return { GIT_PLATFORM_GITLAB: platform === "gitlab" ? "true" : "" };
+  return {
+    GIT_PLATFORM_GITLAB: platform === "gitlab" ? "true" : "",
+    GIT_PLATFORM_BITBUCKET: platform === "bitbucket" ? "true" : "",
+  };
 }
 
 /** Whether a template names a `GIT_PLATFORM_*` variable (and so needs its repo's platform). */

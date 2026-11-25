@@ -41,13 +41,13 @@ describe("featuresFromEnv", () => {
     expect([...ALL_RUNTIMES].sort()).toEqual([...AGENT_TYPES].sort());
     expect([...ALL_TRIGGERS].sort()).toEqual([...TRIGGER_TYPES].sort());
     expect([...ALL_TICKET_SOURCES].sort()).toEqual(Object.values(TicketSource).sort());
-    expect(ALL_GIT_PLATFORMS).toEqual(["github", "gitlab", "codecommit"]);
+    expect(ALL_GIT_PLATFORMS).toEqual(["github", "gitlab", "codecommit", "bitbucket"]);
     const f = featuresFromEnv({});
     expect(
       [f.runtimes, f.gitPlatforms, f.triggers, f.ticketSources, f.connectionProviders].map(
         (l) => l.length,
       ),
-    ).toEqual([8, 3, 15, 5, 13]);
+    ).toEqual([8, 4, 15, 5, 13]);
   });
 
   it("narrows each list to what its env var names, in Optio's order", () => {
