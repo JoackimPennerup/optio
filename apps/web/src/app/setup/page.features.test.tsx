@@ -42,7 +42,9 @@ describe("setup git-platform allowlist", () => {
     await openGitStep();
     expect(screen.getByRole("button", { name: "GitHub" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "GitLab" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Bitbucket Data Center" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Bitbucket Server / Data Center" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /CodeCommit/ })).toBeInTheDocument();
   });
   it("shows only GitLab when the deployment narrows that list", async () => {
@@ -51,13 +53,15 @@ describe("setup git-platform allowlist", () => {
     expect(screen.getByRole("button", { name: "GitLab" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "GitHub" })).toBeNull();
     expect(screen.queryByRole("button", { name: /CodeCommit/ })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Bitbucket Data Center" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Bitbucket Server / Data Center" })).toBeNull();
     expect(screen.queryByPlaceholderText(/ghp_/)).toBeNull();
   });
   it("offers Bitbucket host and token when it is the only git platform", async () => {
     features = featuresFromEnv({ OPTIO_GIT_PLATFORMS: "bitbucket" });
     await openGitStep();
-    expect(screen.getByRole("button", { name: "Bitbucket Data Center" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Bitbucket Server / Data Center" }),
+    ).toBeInTheDocument();
     expect(screen.getByPlaceholderText("bitbucket.example.com")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Validate Bitbucket" })).toBeDisabled();
     expect(screen.queryByRole("button", { name: "GitHub" })).toBeNull();

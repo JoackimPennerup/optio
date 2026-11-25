@@ -37,7 +37,7 @@ const bitbucketTokenSchema = z
       .trim()
       .regex(/^[A-Za-z0-9][A-Za-z0-9.-]*(?::\d{1,5})?$/),
   })
-  .describe("Bitbucket Data Center access token and configured host");
+  .describe("Bitbucket Server / Data Center access token and configured host");
 const awsCredentialsSchema = z
   .object({
     accessKeyId: z.string().min(1),
@@ -302,7 +302,7 @@ export async function setupRoutes(rawApp: FastifyInstance) {
       preHandler: [requireSetupAdmin],
       schema: {
         operationId: "validateBitbucketToken",
-        summary: "Validate a Bitbucket Data Center access token",
+        summary: "Validate a Bitbucket Server / Data Center access token",
         tags: ["Setup & Settings"],
         body: bitbucketTokenSchema,
         response: { 200: ValidationResultSchema, 400: ErrorResponseSchema },
@@ -731,7 +731,7 @@ export async function setupRoutes(rawApp: FastifyInstance) {
       preHandler: [requireSetupAdmin],
       schema: {
         operationId: "listSetupBitbucketRepos",
-        summary: "List Bitbucket Data Center repositories for setup",
+        summary: "List Bitbucket Server / Data Center repositories for setup",
         tags: ["Setup & Settings"],
         body: bitbucketTokenSchema,
         response: { 200: ReposListResponseSchema, 400: ErrorResponseSchema },
@@ -788,7 +788,7 @@ export async function setupRoutes(rawApp: FastifyInstance) {
           for (const row of list.values ?? []) {
             if (repos.length >= 8) break;
             const repoPath = `${root}/projects/${projectKey}/repos/${encodeURIComponent(row.slug)}`;
-            const branchRes = await guardedFetch(`${repoPath}/branches/default`, init);
+            const branchRes = await guardedFetch(`${repoPath}/default-branch`, init);
             const branch = branchRes.ok ? ((await branchRes.json()) as { displayId?: string }) : {};
             repos.push({
               fullName: `${project.key}/${row.slug}`,

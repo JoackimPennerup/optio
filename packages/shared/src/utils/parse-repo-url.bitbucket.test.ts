@@ -8,7 +8,7 @@ import {
 
 afterEach(() => vi.unstubAllEnvs());
 
-describe("Bitbucket Data Center URLs", () => {
+describe("Bitbucket Server / Data Center URLs", () => {
   it("recognizes a configured host and its clone URL", () => {
     vi.stubEnv("BITBUCKET_HOSTS", "git.example.com");
     expect(knownHostPlatform("git.example.com")).toBe("bitbucket");

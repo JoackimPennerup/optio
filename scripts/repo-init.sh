@@ -32,6 +32,20 @@ if [ "${OPTIO_GIT_HOST}" = "github" ] && [ -n "${GITLAB_HOSTS:-}" ]; then
 fi
 echo "[optio] Detected git platform: ${OPTIO_GIT_HOST}"
 
+# Bitbucket Server 8.9 HTTP tokens authenticate Git with a Bearer header.
+# Scope the header to the exact HTTPS host; Git also inherits it for fetches
+# during this init process. Do not write the token into ~/.gitconfig.
+if [ "${OPTIO_GIT_HOST}" = "bitbucket" ] && [ -n "${BITBUCKET_TOKEN:-}" ] && [ -n "${BITBUCKET_HOST:-}" ]; then
+  _repo_host=${OPTIO_REPO_URL#https://}
+  _repo_host=${_repo_host%%/*}
+  if [ "${_repo_host,,}" = "${BITBUCKET_HOST,,}" ]; then
+    export GIT_CONFIG_COUNT=1
+    export GIT_CONFIG_KEY_0="http.https://${BITBUCKET_HOST}/.extraHeader"
+    export GIT_CONFIG_VALUE_0="Authorization: Bearer ${BITBUCKET_TOKEN}"
+    echo "[optio] Bitbucket Bearer authentication configured"
+  fi
+fi
+
 # Set up git credentials for initial clone.
 # Priority: Envoy secret proxy > dynamic credential helper > static PAT fallback.
 # Dynamic credential helpers are re-configured per-task at exec time by the API server.
@@ -104,11 +118,6 @@ elif [ -n "${GITHUB_TOKEN:-}" ] || [ -n "${GITLAB_TOKEN:-}" ] || [ -n "${BITBUCK
       glab auth login --hostname "${GITLAB_HOST}" --token "${GITLAB_TOKEN}" 2>/dev/null || true
     fi
     echo "[optio] GitLab credentials configured (host: ${GITLAB_HOST})"
-  fi
-
-  if [ -n "${BITBUCKET_TOKEN:-}" ] && [ -n "${BITBUCKET_HOST:-}" ]; then
-    echo "https://x-token-auth:${BITBUCKET_TOKEN}@${BITBUCKET_HOST}" >> ~/.git-credentials
-    echo "[optio] Bitbucket credentials configured (host: ${BITBUCKET_HOST})"
   fi
 
   echo "[optio] Git credentials configured (static token)"

@@ -42,6 +42,9 @@ export async function restrictGitCredentialsToRepo(
     "GITLAB_HOST",
     "BITBUCKET_TOKEN",
     "BITBUCKET_HOST",
+    "GIT_CONFIG_COUNT",
+    "GIT_CONFIG_KEY_0",
+    "GIT_CONFIG_VALUE_0",
     "OPTIO_GIT_CREDENTIAL_URL",
     "OPTIO_GIT_TASK_CREDENTIAL_URL",
     "OPTIO_CREDENTIAL_SECRET",
@@ -78,10 +81,19 @@ export async function applyGitAccess(
     }).catch(() => null);
     if (token) {
       env.BITBUCKET_TOKEN = token;
-      env.BITBUCKET_HOST = repo.host;
     }
   }
   if (repo?.platform === "bitbucket") {
+    if (env.BITBUCKET_TOKEN) {
+      // Bitbucket 8.9 accepts user, project and repository HTTP tokens as
+      // Bearer auth. Basic auth with x-token-auth fails for user tokens.
+      // Git's command-scoped config keeps the token off disk and limits it to
+      // this repository host, including its port.
+      env.BITBUCKET_HOST = repo.host;
+      env.GIT_CONFIG_COUNT = "1";
+      env.GIT_CONFIG_KEY_0 = `http.https://${repo.host}/.extraHeader`;
+      env.GIT_CONFIG_VALUE_0 = `Authorization: Bearer ${env.BITBUCKET_TOKEN}`;
+    }
     env.OPTIO_BB_API_URL = repo.apiBaseUrl;
     env.OPTIO_BB_PROJECT = repo.owner;
     env.OPTIO_BB_REPO = repo.repo;

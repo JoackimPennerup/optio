@@ -81,4 +81,17 @@ describe.skipIf(!hasTools)("optio-git-credential", () => {
     );
     expect(asked()).toEqual(["http://optio-api:4000/api/internal/git-credentials?scope=s"]);
   });
+
+  it("never offers a Bitbucket HTTP token as Basic credentials", () => {
+    expect(
+      helper(
+        "bitbucket.example.test",
+        {},
+        {
+          BITBUCKET_TOKEN: "server-token",
+          BITBUCKET_HOST: "bitbucket.example.test",
+        },
+      ),
+    ).toBe("");
+  });
 });

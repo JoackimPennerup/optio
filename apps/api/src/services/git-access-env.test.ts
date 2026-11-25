@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { spawnSync } from "node:child_process";
 
 const installationToken = vi.hoisted(() => vi.fn());
 vi.mock("./github-app-service.js", () => ({
@@ -140,5 +141,45 @@ describe("GitLab optional token resolution", () => {
       helper: false,
     });
     expect(env.GITLAB_TOKEN).toBe("glpat-env-only");
+  });
+});
+
+describe("Bitbucket Server / Data Center Git authentication", () => {
+  it("offers a host-scoped Bearer header to Git for an HTTP access token", async () => {
+    vi.stubEnv("BITBUCKET_HOSTS", "bitbucket.example.test");
+    vi.mocked(retrieveSecretWithFallback).mockImplementation(async (name) => {
+      if (name === "BITBUCKET_TOKEN_BITBUCKET_EXAMPLE_TEST") return "server-token";
+      throw new Error("none");
+    });
+    const env: Record<string, string> = {};
+    await applyGitAccess(env, {
+      workspaceId: "ws-1",
+      repoUrl: "https://bitbucket.example.test/scm/TEAM/service.git",
+    });
+    expect(env.BITBUCKET_HOST).toBe("bitbucket.example.test");
+    expect(env.GIT_CONFIG_COUNT).toBe("1");
+    const gitEnv = { ...process.env, ...env };
+    const matching = spawnSync(
+      "git",
+      [
+        "config",
+        "--get-urlmatch",
+        "http.extraHeader",
+        "https://bitbucket.example.test/scm/TEAM/service.git",
+      ],
+      { env: gitEnv, encoding: "utf8" },
+    );
+    expect(matching.stdout.trim()).toBe("Authorization: Bearer server-token");
+    const other = spawnSync(
+      "git",
+      [
+        "config",
+        "--get-urlmatch",
+        "http.extraHeader",
+        "https://other.example/scm/TEAM/service.git",
+      ],
+      { env: gitEnv, encoding: "utf8" },
+    );
+    expect(other.stdout.trim()).toBe("");
   });
 });

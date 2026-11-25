@@ -449,7 +449,7 @@ describe("POST /api/setup/validate/repo", () => {
   });
 });
 
-describe("Bitbucket Data Center setup", () => {
+describe("Bitbucket Server / Data Center setup", () => {
   let app: FastifyInstance;
 
   beforeEach(async () => {

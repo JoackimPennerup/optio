@@ -1052,7 +1052,7 @@ export default function SetupPage() {
                     )}
                   >
                     <BrandIcon brand="bitbucket" className="w-4 h-4" />
-                    Bitbucket Data Center
+                    Bitbucket Server / Data Center
                   </button>
                 )}
                 {offersGit("codecommit") && (
@@ -1223,11 +1223,12 @@ export default function SetupPage() {
                   <p className="text-text-muted text-sm">
                     Add the host to <code>BITBUCKET_HOSTS</code> in the API environment before
                     validating. For private hosts, also configure{" "}
-                    <code>OPTIO_OUTBOUND_ALLOWED_HOSTS</code>.
+                    <code>OPTIO_OUTBOUND_ALLOWED_HOSTS</code>. Bitbucket 8.9 HTTP tokens can open
+                    pull requests, but merging requires a signed-in user in Bitbucket.
                   </p>
                   <div>
                     <label className="block text-sm text-text-muted mb-1.5">
-                      Bitbucket Data Center host
+                      Bitbucket Server / Data Center host
                     </label>
                     <input
                       type="text"

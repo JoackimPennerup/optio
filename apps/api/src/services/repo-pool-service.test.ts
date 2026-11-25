@@ -167,6 +167,7 @@ import {
 } from "./repo-pool-service.js";
 import { repoPodEnv, buildTaskStartScript } from "./repo-pool-service.js";
 import { superviseAgent } from "../utils/pod-env.js";
+import { resolveSecretsForSetup } from "./secret-service.js";
 
 const REPO_URL = "https://github.com/org/repo";
 
@@ -1331,5 +1332,27 @@ describe("repo pod GitLab host allowlist", () => {
     );
     expect(env.GITLAB_HOSTS).toBe("git.corp.example:8443");
     expect(env.ANTHROPIC_API_KEY).toBeUndefined();
+  });
+});
+
+describe("repo pod Bitbucket initial clone", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("uses only the shared host token in the shared pod", async () => {
+    vi.stubEnv("BITBUCKET_HOSTS", "bitbucket.example.test");
+    vi.mocked(resolveSecretsForSetup).mockResolvedValueOnce({ BITBUCKET_TOKEN: "shared-token" });
+    const env = await repoPodEnv(
+      { BITBUCKET_TOKEN: "private-run-token" },
+      "https://bitbucket.example.test/scm/TEAM/service.git",
+      null,
+    );
+    expect(env.BITBUCKET_TOKEN).toBe("shared-token");
+    expect(env.BITBUCKET_HOST).toBe("bitbucket.example.test");
+  });
+
+  it("does not put a shared Bitbucket token in another platform's pod", async () => {
+    vi.mocked(resolveSecretsForSetup).mockResolvedValueOnce({ BITBUCKET_TOKEN: "shared-token" });
+    const env = await repoPodEnv({}, "https://github.com/org/repo", null);
+    expect(env.BITBUCKET_TOKEN).toBeUndefined();
   });
 });

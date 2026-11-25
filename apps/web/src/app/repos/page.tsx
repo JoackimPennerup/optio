@@ -91,7 +91,7 @@ export default function ReposPage() {
         <EmptyState
           icon={FolderGit2}
           title="No repositories configured"
-          description="Add a GitHub, GitLab, Bitbucket Data Center, or CodeCommit repo to run PR work against it."
+          description="Add a GitHub, GitLab, Bitbucket Server / Data Center, or CodeCommit repo to run PR work against it."
           action={{ label: "Add Repository", href: "/repos/new" }}
         />
       ) : (
