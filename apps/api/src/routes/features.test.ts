@@ -28,7 +28,7 @@ describe("GET /api/features", () => {
     await app.close();
   });
 
-  it("offers everything with nothing set: 8 runtimes, 3 platforms, 15 triggers, 5 sources, 13 connections", async () => {
+  it("offers everything with nothing set: 9 runtimes, 4 platforms, 15 triggers, 5 sources, 13 connections", async () => {
     const res = await app.inject({ method: "GET", url: "/api/features" });
     expect(res.statusCode).toBe(200);
     const body = res.json();
@@ -39,7 +39,7 @@ describe("GET /api/features", () => {
       "ticketSources",
       "triggers",
     ]);
-    expect(body.runtimes).toHaveLength(8);
+    expect(body.runtimes).toHaveLength(9);
     expect(body.gitPlatforms).toEqual(["github", "gitlab", "codecommit", "bitbucket"]);
     expect(body.triggers).toHaveLength(15);
     expect(body.ticketSources).toHaveLength(5);
