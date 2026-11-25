@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Check, Globe, Loader2, Lock, Search } from "lucide-react";
 import { api } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
@@ -41,33 +41,36 @@ export function GitLabRepoBrowser({
   // Drop responses to a search the user has already typed past.
   const requestId = useRef(0);
 
-  const load = async (q: string, onHost: string | null) => {
-    const id = ++requestId.current;
-    setLoading(true);
-    try {
-      const res = await api.browseRepos({
-        q: q.trim() || undefined,
-        platform,
-        host: onHost ?? undefined,
-      });
-      if (id !== requestId.current) return;
-      setRepos(res.repos);
-      setHost(res.host);
-      setHosts(res.hosts ?? []);
-      setError(res.error ?? "");
-    } catch {
-      if (id !== requestId.current) return;
-      setError(`Could not list ${label} repositories`);
-      setRepos([]);
-    } finally {
-      if (id === requestId.current) setLoading(false);
-    }
-  };
+  const load = useCallback(
+    async (q: string, onHost: string | null) => {
+      const id = ++requestId.current;
+      setLoading(true);
+      try {
+        const res = await api.browseRepos({
+          q: q.trim() || undefined,
+          platform,
+          host: onHost ?? undefined,
+        });
+        if (id !== requestId.current) return;
+        setRepos(res.repos);
+        setHost(res.host);
+        setHosts(res.hosts ?? []);
+        setError(res.error ?? "");
+      } catch {
+        if (id !== requestId.current) return;
+        setError(`Could not list ${label} repositories`);
+        setRepos([]);
+      } finally {
+        if (id === requestId.current) setLoading(false);
+      }
+    },
+    [platform, label],
+  );
 
   useEffect(() => {
     const t = setTimeout(() => void load(query, chosenHost), query ? SEARCH_DEBOUNCE_MS : 0);
     return () => clearTimeout(t);
-  }, [query, chosenHost]);
+  }, [query, chosenHost, load]);
 
   const pickHost = (h: string) => {
     if (h === (chosenHost ?? host)) return;
